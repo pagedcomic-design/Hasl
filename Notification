@@ -1,5 +1,5 @@
 _G.JxereasExistingHooks = _G.JxereasExistingHooks or {}
-if not _G.JxereasExistingHooks.GuiDetectionBypass then
+if not _G.JxereasExistingHooks.GuiDetectionBypass and hookfunc and hookmetamethod and syn_context_get then
     local CoreGui = game.CoreGui
     local ContentProvider = game.ContentProvider
     local RobloxGuis = { "RobloxGui", "TeleportGui", "RobloxPromptGui", "RobloxLoadingGui", "PlayerList",
