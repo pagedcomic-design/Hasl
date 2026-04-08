@@ -180,6 +180,7 @@ function Forums.new(Themes, close_callback)
     Open.Image = "rbxassetid://14494607687"
     Open.ImageTransparency = 0.500
     Open.Active = true
+    Forums:DraggingEnabled(Open)
     input.InputEnded:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftControl then
             UIMinimize()
