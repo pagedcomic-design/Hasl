@@ -1,10 +1,10 @@
 if loadstring(game:HttpGet "https://pastebin.com/raw/SKQ4yd4e")() ~= 'This is the Hasl script UI to prevent theft' then
-    while wait() do
+    while task.wait() do
         print('你个傻逼还想盗用Hasl的UI')
     end
 end
 repeat
-    wait()
+    task.wait()
 until game:IsLoaded()
 local Forums = {}
 local Theme = {
@@ -59,12 +59,18 @@ local run = game:GetService("RunService")
 function Forums:DraggingEnabled(frame, parent)
     parent = parent or frame
 
-    -- stolen from wally or kiriot, kek
     local dragging = false
     local dragInput, mousePos, framePos
 
+    local function update(input)
+        local delta = input.Position - mousePos
+        game:GetService("TweenService"):Create(parent, TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+            Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+        }):Play()
+    end
+
     frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             mousePos = input.Position
             framePos = parent.Position
@@ -78,19 +84,14 @@ function Forums:DraggingEnabled(frame, parent)
     end)
 
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
 
-    input.InputChanged:Connect(function(input)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            local delta = input.Position - mousePos
-            game.TweenService:Create(parent, TweenInfo.new(0.08, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
-                Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale,
-                    framePos.Y.Offset + delta.Y)
-            }):Play()
-            --parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+            update(input)
         end
     end)
 end
@@ -101,7 +102,7 @@ function UIMinimize()
             TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                 Size = UDim2.new(0, 486, 0, 283)
             }):Play()
-        wait()
+        task.wait()
         game.TweenService:Create(game.CoreGui[getgenv().libName].shadow,
             TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                 ImageTransparency = 0
@@ -112,7 +113,7 @@ function UIMinimize()
             TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                 ImageTransparency = 1.000
             }):Play()
-        wait()
+        task.wait()
         game.TweenService:Create(game.CoreGui[getgenv().libName].shadow.Main,
             TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                 Size = UDim2.new(0, 0, 0, 0)
@@ -180,15 +181,7 @@ function Forums.new(Themes, close_callback)
     Open.Position = UDim2.new(0.0803011283, 0, 0.472511142, 0)
     Open.Size = UDim2.new(0, 50, 0, 50)
     Open.ZIndex = 1
-    Open.Image = "rbxassetid://14494607687"
-    Open.ImageTransparency = 0.500
-    Open.Active = true
-    Open.Draggable = true
-    input.InputEnded:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.LeftControl then
-            UIMinimize()
-        end
-    end)
+    Forums:DraggingEnabled(Open, Open)
     Open.MouseButton1Click:Connect(function()
         UIMinimize()
     end)
@@ -225,7 +218,6 @@ function Forums.new(Themes, close_callback)
     Main.Position = UDim2.new(0.361818194, 0, 0.354368925, 0)
     Main.Size = UDim2.new(0, 0, 0, 0) --0, 486, 0, 283
     Main.Active = true
-    Main.Draggable = true
     header.Name = "header"
     header.Parent = Main
     header.BackgroundColor3 = Themes.MainHeaderColor
@@ -283,11 +275,11 @@ function Forums.new(Themes, close_callback)
         game.TweenService:Create(shadow, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
             ImageTransparency = 1
         }):Play()
-        wait()
+        task.wait()
         game.TweenService:Create(Main, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
             Size = UDim2.new(0, 0, 0, 0)
         }):Play()
-        wait(1)
+        task.wait(0.1)
         _81asf91z9asf1:Destroy()
     end)
 
@@ -309,7 +301,7 @@ function Forums.new(Themes, close_callback)
     game.TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
         Size = UDim2.new(0, 486, 0, 283)
     }):Play()
-    wait()
+    task.wait()
     game.TweenService:Create(shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
         ImageTransparency = 0
     }):Play()
@@ -486,12 +478,13 @@ function Forums.new(Themes, close_callback)
                 else
                     size = (btn.AbsoluteSize.Y * 1.5)
                 end
-                c:TweenSizeAndPosition(UDim2.new(0, size, 0, size), UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                    'Out',
-                    'Quad', len, true, nil)
+                game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, size, 0, size),
+                    Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                }):Play()
                 for i = 1, 10 do
                     c.ImageTransparency = c.ImageTransparency + 0.05
-                    wait(len / 12)
+                    task.wait(len / 12)
                 end
                 c:Destroy()
             end)
@@ -513,7 +506,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             TextTransparency = 1
                         }):Play()
-                    wait(0.14)
+                    task.wait(0.14)
                     btnText.Text = textB
                     game.TweenService:Create(btnText,
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -668,12 +661,13 @@ function Forums.new(Themes, close_callback)
                 else
                     size = (btn.AbsoluteSize.Y * 1.5)
                 end
-                c:TweenSizeAndPosition(UDim2.new(0, size, 0, size), UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                    'Out',
-                    'Quad', len, true, nil)
+                game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, size, 0, size),
+                    Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                }):Play()
                 for i = 1, 10 do
                     c.ImageTransparency = c.ImageTransparency + 0.05
-                    wait(len / 12)
+                    task.wait(len / 12)
                 end
                 c:Destroy()
             end)
@@ -688,7 +682,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, 20, 0, 20)
                         }):Play()
-                    wait(0.08)
+                    task.wait(0.08)
                     game.TweenService:Create(checked,
                         TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, 24, 0, 24)
@@ -714,7 +708,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, 20, 0, 20)
                         }):Play()
-                    wait(0.08)
+                    task.wait(0.08)
                     game.TweenService:Create(checked,
                         TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, 24, 0, 24)
@@ -738,7 +732,7 @@ function Forums.new(Themes, close_callback)
                         Size = UDim2.new(0, 30, 0, 30),
                         BackgroundTransparency = 0.7
                     }):Play()
-                wait(0.15)
+                task.wait(0.15)
                 game.TweenService:Create(circle,
                     TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
                     {
@@ -778,7 +772,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             TextTransparency = 1
                         }):Play()
-                    wait(0.14)
+                    task.wait(0.14)
                     toggleFrame_2.Text = textT
                     game.TweenService:Create(toggleFrame_2,
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -898,7 +892,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             TextTransparency = 1
                         }):Play()
-                    wait(0.14)
+                    task.wait(0.14)
                     txtboxText.Text = textB
                     game.TweenService:Create(txtboxText,
                         TweenInfo.new(0.14, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1020,7 +1014,9 @@ function Forums.new(Themes, close_callback)
                         local percentage = math.clamp(movePos / SliderButton.AbsoluteSize.X, 0, 1)
                         Value = math.floor(minvalue + (maxvalue - minvalue) * percentage)
                         sliderText_2.Text = tostring(Value)
-                        sliderDrag:TweenSize(UDim2.new(percentage, 0, 0, 8), "Out", "Quad", 0.1, true)
+                        game:GetService("TweenService"):Create(sliderDrag, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(percentage, 0, 0, 8)
+                        }):Play()
                         pcall(function()
                             callback(Value)
                         end)
@@ -1143,19 +1139,19 @@ function Forums.new(Themes, close_callback)
                     TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                         TextTransparency = 1
                     }):Play()
-                wait(0.14)
+                task.wait(0.14)
                 currentKey.Text = ". . ."
                 game.TweenService:Create(currentKey,
                     TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                         TextTransparency = 0
                     }):Play()
-                local a, b = game:GetService('UserInputService').InputBegan:wait();
+                local a, b = game:GetService('UserInputService').InputBegan:Wait();
                 if a.KeyCode.Name ~= "Unknown" then
                     game.TweenService:Create(currentKey,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             TextTransparency = 1
                         }):Play()
-                    wait(0.14)
+                    task.wait(0.14)
                     currentKey.Text = a.KeyCode.Name
                     oldKey = a.KeyCode.Name;
                     game.TweenService:Create(currentKey,
@@ -1173,12 +1169,13 @@ function Forums.new(Themes, close_callback)
                 else
                     size = (btn.AbsoluteSize.Y * 1.5)
                 end
-                c:TweenSizeAndPosition(UDim2.new(0, size, 0, size), UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                    'Out',
-                    'Quad', len, true, nil)
+                game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, size, 0, size),
+                    Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                }):Play()
                 for i = 1, 10 do
                     c.ImageTransparency = c.ImageTransparency + 0.05
-                    wait(len / 12)
+                    task.wait(len / 12)
                 end
                 c:Destroy()
             end)
@@ -1195,7 +1192,7 @@ function Forums.new(Themes, close_callback)
                     }):Play()
             end)
 
-            game:GetService("UserInputService").InputBegan:connect(function(current, ok)
+            game:GetService("UserInputService").InputBegan:Connect(function(current, ok)
                 if not ok then
                     if current.KeyCode.Name == oldKey then
                         callback()
@@ -1209,7 +1206,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             TextTransparency = 1
                         }):Play()
-                    wait(0.14)
+                    task.wait(0.14)
                     oldKey = newKey.Name
                     currentKey.Text = oldKey
                     game.TweenService:Create(currentKey,
@@ -1269,7 +1266,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Rotation = 0
                         }):Play()
-                    wait(0.1)
+                    task.wait(0.1)
                     game.TweenService:Create(sectionMain,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
@@ -1285,7 +1282,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Rotation = 180
                         }):Play()
-                    wait(0.1)
+                    task.wait(0.1)
                     game.TweenService:Create(sectionMain,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
@@ -1302,12 +1299,13 @@ function Forums.new(Themes, close_callback)
                 else
                     size = (dropOpen.AbsoluteSize.Y * 1.5)
                 end
-                c:TweenSizeAndPosition(UDim2.new(0, size, 0, size), UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                    'Out',
-                    'Quad', len, true, nil)
+                game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, size, 0, size),
+                    Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                }):Play()
                 for i = 1, 10 do
                     c.ImageTransparency = c.ImageTransparency + 0.05
-                    wait(len / 12)
+                    task.wait(len / 12)
                 end
                 c:Destroy()
             end)
@@ -1430,7 +1428,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Rotation = 0
                         }):Play()
-                    wait(0.1)
+                    task.wait(0.1)
                     game.TweenService:Create(sectionMain,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
@@ -1447,11 +1445,13 @@ function Forums.new(Themes, close_callback)
                     else
                         size = (dropOpen.AbsoluteSize.Y * 1.5)
                     end
-                    c:TweenSizeAndPosition(UDim2.new(0, size, 0, size), UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                        'Out', 'Quad', len, true, nil)
+                    game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, size, 0, size),
+                        Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                    }):Play()
                     for i = 1, 10 do
                         c.ImageTransparency = c.ImageTransparency + 0.05
-                        wait(len / 12)
+                        task.wait(len / 12)
                     end
                     c:Destroy()
                 end)
@@ -1533,7 +1533,7 @@ function Forums.new(Themes, close_callback)
                             TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                                 Rotation = 0
                             }):Play()
-                        wait(0.1)
+                        task.wait(0.1)
                         game.TweenService:Create(sectionMain,
                             TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                                 Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
@@ -1550,12 +1550,13 @@ function Forums.new(Themes, close_callback)
                         else
                             size = (dropOpen.AbsoluteSize.Y * 1.5)
                         end
-                        c:TweenSizeAndPosition(UDim2.new(0, size, 0, size),
-                            UDim2.new(0.5, (-size / 2), 0.5, (-size / 2)),
-                            'Out', 'Quad', len, true, nil)
+                    game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, size, 0, size),
+                        Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                    }):Play()
                         for i = 1, 10 do
                             c.ImageTransparency = c.ImageTransparency + 0.05
-                            wait(len / 12)
+                            task.wait(len / 12)
                         end
                         c:Destroy()
                     end)
@@ -1582,7 +1583,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Rotation = 180
                         }):Play()
-                    wait(0.1)
+                    task.wait(0.1)
                     game.TweenService:Create(sectionMain,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
@@ -1597,7 +1598,7 @@ function Forums.new(Themes, close_callback)
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Rotation = 0
                         }):Play()
-                    wait(0.1)
+                    task.wait(0.1)
                     game.TweenService:Create(sectionMain,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                             Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
