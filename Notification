@@ -721,7 +721,7 @@ local function deleteNotifsOutsideFrame()
     end
 end
 
-function Notify(notifType, heading, body, autoRemove, autoRemoveTime, callback)
+function Notification.new(notifType, heading, body, autoRemove, autoRemoveTime, callback)
     local notificationTypes = {
         ["error"] = errorTemplate,
         ["info"] = infoTemplate,
