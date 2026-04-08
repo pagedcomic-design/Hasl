@@ -296,122 +296,43 @@ function Forums.new(Themes, close_callback)
     containerHolder.Position = UDim2.new(0, 0, 0.124251083, 0)
     containerHolder.Size = UDim2.new(0, 485, 0, 247)
 
-    local sideBar = Instance.new("ScrollingFrame")
-    local sideList = Instance.new("UIListLayout")
-    local sidePadding = Instance.new("UIPadding")
+    pages.Name = "pages"
+    pages.Parent = containerHolder
 
-    sideBar.Name = "sideBar"
-    sideBar.Parent = containerHolder
-    sideBar.BackgroundColor3 = Themes.SectionMainColor
-    sideBar.BorderSizePixel = 0
-    sideBar.Size = UDim2.new(0, 110, 1, 0)
-    sideBar.ScrollBarThickness = 0
-    sideBar.CanvasSize = UDim2.new(0, 0, 0, 0)
+    UIListLayout_2.Parent = shadow
+    UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    sideList.Parent = sideBar
-    sideList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    sideList.SortOrder = Enum.SortOrder.LayoutOrder
-    sideList.Padding = UDim.new(0, 5)
+    game.TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+        Size = UDim2.new(0, 486, 0, 283)
+    }):Play()
+    task.wait()
+    game.TweenService:Create(shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+        ImageTransparency = 0
+    }):Play()
 
-    sidePadding.Parent = sideBar
-    sidePadding.PaddingTop = UDim.new(0, 5)
+    newPage.Name = "newPage"
+    newPage.Parent = pages
+    newPage.Active = true
+    newPage.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+    newPage.BackgroundTransparency = 1.000
+    newPage.BorderColor3 = Color3.fromRGB(27, 27, 27)
+    newPage.Size = UDim2.new(1, 0, 1, 0)
+    newPage.ScrollBarThickness = 3
+    newPage.ScrollBarImageColor3 = Themes.NewPageColor
+    sectionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        newPage.CanvasSize = UDim2.new(0, 0, 0, sectionList.AbsoluteContentSize.Y)
+    end)
 
-    local pageHolder = Instance.new("Frame")
-    pageHolder.Name = "pageHolder"
-    pageHolder.Parent = containerHolder
-    pageHolder.BackgroundTransparency = 1
-    pageHolder.Position = UDim2.new(0, 110, 0, 0)
-    pageHolder.Size = UDim2.new(1, -110, 1, 0)
+    sectionList.Name = "sectionList"
+    sectionList.Parent = newPage
+    sectionList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    sectionList.SortOrder = Enum.SortOrder.LayoutOrder
 
-    local lib = {
-        CurrentPage = nil,
-        FirstPage = nil,
-        Pages = {}
-    }
+    local sections = {}
 
-    function lib:NewPage(name)
-        name = name or "Page"
-        local pageBtn = Instance.new("TextButton")
-        local pageBtnCorner = Instance.new("UICorner")
-        local pageBtnText = Instance.new("TextLabel")
-
-        local newPage = Instance.new("ScrollingFrame")
-        local sectionList = Instance.new("UIListLayout")
-        local pagePadding = Instance.new("UIPadding")
-
-        pageBtn.Name = name .. "Btn"
-        pageBtn.Parent = sideBar
-        pageBtn.BackgroundColor3 = Themes.MainColor
-        pageBtn.Size = UDim2.new(0, 100, 0, 30)
-        pageBtn.AutoButtonColor = false
-        pageBtn.Text = ""
-
-        pageBtnCorner.CornerRadius = UDim.new(0, 6)
-        pageBtnCorner.Parent = pageBtn
-
-        pageBtnText.Parent = pageBtn
-        pageBtnText.Size = UDim2.new(1, 0, 1, 0)
-        pageBtnText.BackgroundTransparency = 1
-        pageBtnText.Font = Enum.Font.Gotham
-        pageBtnText.Text = name
-        pageBtnText.TextColor3 = Color3.fromRGB(200, 200, 200)
-        pageBtnText.TextSize = 12
-
-        newPage.Name = name .. "Page"
-        newPage.Parent = pageHolder
-        newPage.Active = true
-        newPage.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
-        newPage.BackgroundTransparency = 1.000
-        newPage.Size = UDim2.new(1, 0, 1, 0)
-        newPage.ScrollBarThickness = 3
-        newPage.ScrollBarImageColor3 = Themes.NewPageColor
-        newPage.Visible = false
-
-        sectionList.Name = "sectionList"
-        sectionList.Parent = newPage
-        sectionList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-        sectionList.SortOrder = Enum.SortOrder.LayoutOrder
-        sectionList.Padding = UDim.new(0, 10)
-
-        pagePadding.Parent = newPage
-        pagePadding.PaddingTop = UDim.new(0, 10)
-
-        sectionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            newPage.CanvasSize = UDim2.new(0, 0, 0, sectionList.AbsoluteContentSize.Y + 20)
-        end)
-
-        sideList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            sideBar.CanvasSize = UDim2.new(0, 0, 0, sideList.AbsoluteContentSize.Y + 10)
-        end)
-
-        local pageObj = {}
-
-        function pageObj:Open()
-            if lib.CurrentPage then
-                lib.CurrentPage.ButtonText.TextColor3 = Color3.fromRGB(200, 200, 200)
-                game.TweenService:Create(lib.CurrentPage.Button, TweenInfo.new(0.2), {BackgroundColor3 = Themes.MainColor}):Play()
-                lib.CurrentPage.PageFrame.Visible = false
-            end
-            lib.CurrentPage = {
-                Button = pageBtn,
-                ButtonText = pageBtnText,
-                PageFrame = newPage
-            }
-            pageBtnText.TextColor3 = Color3.fromRGB(255, 255, 255)
-            game.TweenService:Create(pageBtn, TweenInfo.new(0.2), {BackgroundColor3 = Themes.MainHeaderColor}):Play()
-            newPage.Visible = true
-        end
-
-        pageBtn.MouseButton1Click:Connect(function()
-            pageObj:Open()
-        end)
-
-        if not lib.FirstPage then
-            lib.FirstPage = pageObj
-            pageObj:Open()
-        end
-
-        function pageObj:NewSection(title)
+    function sections:NewSection(title)
         title = title or "Section"
 
         local sectionMain = Instance.new("Frame")
@@ -424,8 +345,8 @@ function Forums.new(Themes, close_callback)
         sectionMain.BackgroundColor3 = Themes.SectionMainColor
         sectionMain.BorderColor3 = Color3.fromRGB(27, 27, 27)
         sectionMain.ClipsDescendants = true
-        sectionMain.Position = UDim2.new(0, 0, 0, 0)
-        sectionMain.Size = UDim2.new(0, 360, 0, 36)
+        sectionMain.Position = UDim2.new(0, 0, 0.0040487065, 0)
+        sectionMain.Size = UDim2.new(0, 485, 0, 36)
 
         itemsList.Name = "itemsList"
         itemsList.Parent = sectionMain
@@ -437,7 +358,7 @@ function Forums.new(Themes, close_callback)
         sectionOpen.Parent = sectionMain
         sectionOpen.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
         sectionOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
-        sectionOpen.Size = UDim2.new(0, 360, 0, 36)
+        sectionOpen.Size = UDim2.new(0, 486, 0, 36)
         sectionOpen.AutoButtonColor = false
         sectionOpen.Text = ""
         sectionOpen.Font = Enum.Font.SourceSans
@@ -449,7 +370,7 @@ function Forums.new(Themes, close_callback)
         sectionTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         sectionTitle.BackgroundTransparency = 1.000
         sectionTitle.Position = UDim2.new(0.0222204365, 0, 0.245634928, 0)
-        sectionTitle.Size = UDim2.new(0, 300, 0, 18)
+        sectionTitle.Size = UDim2.new(0, 184, 0, 18)
         sectionTitle.Font = Enum.Font.Gotham
         sectionTitle.Text = title
         sectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -462,7 +383,7 @@ function Forums.new(Themes, close_callback)
             if opened then
                 game.TweenService:Create(sectionMain,
                     TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                    Size = UDim2.new(0, 360, 0, 36)
+                        Size = UDim2.new(0, 486, 0, 36)
                     }):Play()
                 opened = false
             else
@@ -505,7 +426,7 @@ function Forums.new(Themes, close_callback)
             btnFrame.BorderColor3 = Color3.fromRGB(27, 27, 27)
             btnFrame.ClipsDescendants = true
             btnFrame.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
-            btnFrame.Size = UDim2.new(0, 350, 0, 32)
+            btnFrame.Size = UDim2.new(0, 474, 0, 32)
             btnFrame.Text = ""
             btnFrame.AutoButtonColor = false
             btnFrame.Font = Enum.Font.SourceSans
@@ -628,7 +549,7 @@ function Forums.new(Themes, close_callback)
             toggleFrame.BorderColor3 = Color3.fromRGB(27, 27, 27)
             toggleFrame.ClipsDescendants = true
             toggleFrame.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
-            toggleFrame.Size = UDim2.new(0, 350, 0, 32)
+            toggleFrame.Size = UDim2.new(0, 474, 0, 32)
             toggleFrame.AutoButtonColor = false
             toggleFrame.Font = Enum.Font.SourceSans
             toggleFrame.Text = ""
@@ -888,7 +809,7 @@ function Forums.new(Themes, close_callback)
             textboxFrame.BorderColor3 = Color3.fromRGB(27, 27, 27)
             textboxFrame.ClipsDescendants = true
             textboxFrame.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
-            textboxFrame.Size = UDim2.new(0, 350, 0, 32)
+            textboxFrame.Size = UDim2.new(0, 474, 0, 32)
             textboxFrame.AutoButtonColor = false
             textboxFrame.Font = Enum.Font.SourceSans
             textboxFrame.Text = ""
@@ -1068,7 +989,7 @@ function Forums.new(Themes, close_callback)
             SliderButton.BackgroundColor3 = Themes.SliderButtonColor
             SliderButton.BorderColor3 = Themes.SliderButtonColor
             SliderButton.Position = UDim2.new(0.397000015, 0, 0.405999988, 0)
-            SliderButton.Size = UDim2.new(0, 150, 0, 6)
+            SliderButton.Size = UDim2.new(0, 215, 0, 6)
             SliderButton.AutoButtonColor = false
             SliderButton.Font = Enum.Font.SourceSans
             SliderButton.Text = ""
@@ -1159,7 +1080,7 @@ function Forums.new(Themes, close_callback)
             keybindFrame.BorderColor3 = Color3.fromRGB(27, 27, 27)
             keybindFrame.ClipsDescendants = true
             keybindFrame.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
-            keybindFrame.Size = UDim2.new(0, 350, 0, 32)
+            keybindFrame.Size = UDim2.new(0, 474, 0, 32)
             keybindFrame.AutoButtonColor = false
             keybindFrame.Font = Enum.Font.SourceSans
             keybindFrame.Text = ""
@@ -1324,7 +1245,7 @@ function Forums.new(Themes, close_callback)
             dropFrame.BorderColor3 = Color3.fromRGB(33, 33, 33)
             dropFrame.ClipsDescendants = true
             dropFrame.Position = UDim2.new(0.0113402065, 0, 0.593175828, 0)
-            dropFrame.Size = UDim2.new(0, 350, 0, 32)
+            dropFrame.Size = UDim2.new(0, 474, 0, 32)
 
             dropOpen.Name = "dropOpen"
             dropOpen.Parent = dropFrame
@@ -1332,7 +1253,7 @@ function Forums.new(Themes, close_callback)
             dropOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
             dropOpen.ClipsDescendants = true
             dropOpen.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
-            dropOpen.Size = UDim2.new(0, 350, 0, 32)
+            dropOpen.Size = UDim2.new(0, 474, 0, 32)
             dropOpen.AutoButtonColor = false
             dropOpen.Font = Enum.Font.SourceSans
             dropOpen.Text = ""
@@ -1343,7 +1264,7 @@ function Forums.new(Themes, close_callback)
                     dOpened = false
                     game.TweenService:Create(dropFrame,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                            Size = UDim2.new(0, 350, 0, 32)
+                            Size = UDim2.new(0, 474, 0, 32)
                         }):Play()
                     game.TweenService:Create(expand_more,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1359,7 +1280,7 @@ function Forums.new(Themes, close_callback)
                     dOpened = true
                     game.TweenService:Create(dropFrame,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                            Size = UDim2.new(0, 350, 0, dropList.AbsoluteContentSize.Y + 5)
+                            Size = UDim2.new(0, 474, 0, dropList.AbsoluteContentSize.Y + 5)
                         }):Play()
                     game.TweenService:Create(expand_more,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1469,7 +1390,7 @@ function Forums.new(Themes, close_callback)
                 dropOption.BorderColor3 = Color3.fromRGB(30, 30, 30)
                 dropOption.ClipsDescendants = true
                 dropOption.Position = UDim2.new(0, 0, 0.25179857, 0)
-                dropOption.Size = UDim2.new(0, 340, 0, 32)
+                dropOption.Size = UDim2.new(0, 464, 0, 32)
                 dropOption.AutoButtonColor = false
                 dropOption.Font = Enum.Font.SourceSans
                 dropOption.Text = ""
@@ -1505,7 +1426,7 @@ function Forums.new(Themes, close_callback)
                     callback(v)
                     game.TweenService:Create(dropFrame,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                            Size = UDim2.new(0, 350, 0, 32)
+                            Size = UDim2.new(0, 474, 0, 32)
                         }):Play()
                     game.TweenService:Create(expand_more,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1572,7 +1493,7 @@ function Forums.new(Themes, close_callback)
                     dropOption.BorderColor3 = Color3.fromRGB(30, 30, 30)
                     dropOption.ClipsDescendants = true
                     dropOption.Position = UDim2.new(0, 0, 0.25179857, 0)
-                    dropOption.Size = UDim2.new(0, 340, 0, 32)
+                    dropOption.Size = UDim2.new(0, 464, 0, 32)
                     dropOption.AutoButtonColor = false
                     dropOption.Font = Enum.Font.SourceSans
                     dropOption.Text = ""
@@ -1610,7 +1531,7 @@ function Forums.new(Themes, close_callback)
                         callback(v)
                         game.TweenService:Create(dropFrame,
                             TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                                Size = UDim2.new(0, 350, 0, 32)
+                                Size = UDim2.new(0, 474, 0, 32)
                             }):Play()
                         game.TweenService:Create(expand_more,
                             TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1660,7 +1581,7 @@ function Forums.new(Themes, close_callback)
                 if dOpened then
                     game.TweenService:Create(dropFrame,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                            Size = UDim2.new(0, 350, 0, dropList.AbsoluteContentSize.Y + 5)
+                            Size = UDim2.new(0, 474, 0, dropList.AbsoluteContentSize.Y + 5)
                         }):Play()
                     game.TweenService:Create(expand_more,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1675,7 +1596,7 @@ function Forums.new(Themes, close_callback)
                 else
                     game.TweenService:Create(dropFrame,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                            Size = UDim2.new(0, 350, 0, 32)
+                            Size = UDim2.new(0, 474, 0, 32)
                         }):Play()
                     game.TweenService:Create(expand_more,
                         TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1700,24 +1621,13 @@ function Forums.new(Themes, close_callback)
             seperator.Parent = sectionMain
             seperator.BackgroundColor3 = Themes.SeperatorColor
             seperator.BorderColor3 = Color3.fromRGB(27, 27, 27)
-            seperator.Size = UDim2.new(0, 350, 0, 2)
-            return fElements
+            seperator.Size = UDim2.new(0, 474, 0, 2)
         end
 
         return fElements
     end
 
-    return pageObj
-end
-
-    function lib:NewSection(title)
-        if not lib.FirstPage then
-            lib:NewPage("Main")
-        end
-        return lib.FirstPage:NewSection(title)
-    end
-
-    return lib
+    return sections
 end
 
 return Forums
