@@ -62,36 +62,32 @@ function Forums:DraggingEnabled(frame, parent)
     local dragging = false
     local dragInput, mousePos, framePos
 
-    local function update(input)
-        local delta = input.Position - mousePos
-        game:GetService("TweenService"):Create(parent, TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-            Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-        }):Play()
-    end
-
     frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not game:GetService("UserInputService"):GetFocusedTextBox() then
             dragging = true
             mousePos = input.Position
             framePos = parent.Position
 
-            input.Changed:Connect(function()
+            local connection
+            connection = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
+                    connection:Disconnect()
                 end
             end)
         end
     end)
 
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             dragInput = input
         end
     end)
 
     game:GetService("UserInputService").InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            update(input)
+            local delta = input.Position - mousePos
+            parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
         end
     end)
 end
@@ -181,7 +177,14 @@ function Forums.new(Themes, close_callback)
     Open.Position = UDim2.new(0.0803011283, 0, 0.472511142, 0)
     Open.Size = UDim2.new(0, 50, 0, 50)
     Open.ZIndex = 1
-    Forums:DraggingEnabled(Open, Open)
+    Open.Image = "rbxassetid://14494607687"
+    Open.ImageTransparency = 0.500
+    Open.Active = true
+    input.InputEnded:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.LeftControl then
+            UIMinimize()
+        end
+    end)
     Open.MouseButton1Click:Connect(function()
         UIMinimize()
     end)
@@ -279,7 +282,7 @@ function Forums.new(Themes, close_callback)
         game.TweenService:Create(Main, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
             Size = UDim2.new(0, 0, 0, 0)
         }):Play()
-        task.wait(0.1)
+        task.wait(1)
         _81asf91z9asf1:Destroy()
     end)
 
@@ -1014,9 +1017,7 @@ function Forums.new(Themes, close_callback)
                         local percentage = math.clamp(movePos / SliderButton.AbsoluteSize.X, 0, 1)
                         Value = math.floor(minvalue + (maxvalue - minvalue) * percentage)
                         sliderText_2.Text = tostring(Value)
-                        game:GetService("TweenService"):Create(sliderDrag, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            Size = UDim2.new(percentage, 0, 0, 8)
-                        }):Play()
+                        sliderDrag:TweenSize(UDim2.new(percentage, 0, 0, 8), "Out", "Quad", 0.1, true)
                         pcall(function()
                             callback(Value)
                         end)
@@ -1192,7 +1193,7 @@ function Forums.new(Themes, close_callback)
                     }):Play()
             end)
 
-            game:GetService("UserInputService").InputBegan:Connect(function(current, ok)
+            game:GetService("UserInputService").InputBegan:connect(function(current, ok)
                 if not ok then
                     if current.KeyCode.Name == oldKey then
                         callback()
@@ -1550,10 +1551,10 @@ function Forums.new(Themes, close_callback)
                         else
                             size = (dropOpen.AbsoluteSize.Y * 1.5)
                         end
-                    game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(0, size, 0, size),
-                        Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
-                    }):Play()
+                        game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(0, size, 0, size),
+                            Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
+                        }):Play()
                         for i = 1, 10 do
                             c.ImageTransparency = c.ImageTransparency + 0.05
                             task.wait(len / 12)
