@@ -1986,7 +1986,6 @@ function Forums.new(Themes, close_callback)
             return ColorPickerFunc
         end
 
-        end
 
         function fElements:Seperator()
             local seperator = Instance.new("Frame")
@@ -3318,21 +3317,7 @@ function Forums.new(Themes, close_callback)
 
                 return ColorPickerFunc
             end
-                cTitle = cTitle or "Color Picker"
-                defaultColor = defaultColor or Color3.fromRGB(255, 255, 255)
-                callback = callback or function() end
-                
-                local ColorPickerFunc = {}
-                local cOpened = false
-                local hue, sat, val = defaultColor:ToHSV()
 
-                local cpFrame = Instance.new("Frame")
-                local cpOpen = Instance.new("TextButton")
-                local ms = game:GetService("Players").LocalPlayer:GetMouse()
-                local uis = game:GetService("UserInputService")
-                local cpInf = Instance.new("TextLabel")
-                return ColorPickerFunc
-            end
 
 
             function fElements:Seperator()
