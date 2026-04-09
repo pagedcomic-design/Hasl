@@ -306,11 +306,24 @@ function Forums.new(Themes, close_callback)
     containerHolder.Parent = Main
     containerHolder.BackgroundColor3 = Themes.TainerHdlderColor
     containerHolder.BorderSizePixel = 0
+    containerHolder.ClipsDescendants = true
     containerHolder.Position = UDim2.new(0, 0, 0.124251083, 0)
     containerHolder.Size = UDim2.new(0, 485, 0, 247)
 
     pages.Name = "pages"
     pages.Parent = containerHolder
+
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "overlay"
+    overlay.Parent = containerHolder
+    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.BorderSizePixel = 0
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.ZIndex = 19
+    overlay.Text = ""
+    overlay.AutoButtonColor = false
+    overlay.Visible = false
 
     local sidebar = Instance.new("Frame")
     sidebar.Name = "sidebar"
@@ -318,69 +331,125 @@ function Forums.new(Themes, close_callback)
     sidebar.BackgroundColor3 = Themes.MainHeaderColor
     sidebar.BorderSizePixel = 0
     sidebar.ClipsDescendants = true
-    sidebar.Position = UDim2.new(0, 0, 0, 0)
-    sidebar.Size = UDim2.new(0, 0, 1, 0)
+    sidebar.Position = UDim2.new(0, -140, 0, 0)
+    sidebar.Size = UDim2.new(0, 140, 1, 0)
     sidebar.ZIndex = 20
+
+    local sidebarCorner = Instance.new("UICorner")
+    sidebarCorner.CornerRadius = UDim.new(0, 6)
+    sidebarCorner.Parent = sidebar
+
+    local sidebarPadding = Instance.new("UIPadding")
+    sidebarPadding.Parent = sidebar
+    sidebarPadding.PaddingTop = UDim.new(0, 6)
+    sidebarPadding.PaddingBottom = UDim.new(0, 6)
 
     local sidebarList = Instance.new("UIListLayout")
     sidebarList.Parent = sidebar
     sidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
     sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
-    sidebarList.Padding = UDim.new(0, 2)
+    sidebarList.Padding = UDim.new(0, 3)
 
     local sidebarOpen = false
     local sidebarWidth = 140
     local allPages = {}
     local allPageButtons = {}
+    local allPageIndicators = {}
     local currentPageName = nil
+
+    local function openSidebar()
+        sidebarOpen = true
+        overlay.Visible = true
+        game.TweenService:Create(overlay, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0.5
+        }):Play()
+        game.TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        game.TweenService:Create(menuBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+            Rotation = 90
+        }):Play()
+    end
+
+    local function closeSidebar()
+        sidebarOpen = false
+        game.TweenService:Create(overlay, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1
+        }):Play()
+        game.TweenService:Create(sidebar, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0, -sidebarWidth, 0, 0)
+        }):Play()
+        game.TweenService:Create(menuBtn, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+            Rotation = 0
+        }):Play()
+        task.delay(0.25, function()
+            if not sidebarOpen then
+                overlay.Visible = false
+            end
+        end)
+    end
 
     menuBtn.MouseButton1Click:Connect(function()
         if sidebarOpen then
-            game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, 0, 1, 0)
-            }):Play()
-            sidebarOpen = false
+            closeSidebar()
         else
-            game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, sidebarWidth, 1, 0)
-            }):Play()
-            sidebarOpen = true
+            openSidebar()
+        end
+    end)
+    overlay.MouseButton1Click:Connect(function()
+        if sidebarOpen then
+            closeSidebar()
         end
     end)
     menuBtn.MouseEnter:Connect(function()
-        game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+        game.TweenService:Create(menuBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             ImageColor3 = Color3.fromRGB(200, 200, 200)
         }):Play()
     end)
     menuBtn.MouseLeave:Connect(function()
-        game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+        game.TweenService:Create(menuBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             ImageColor3 = Color3.fromRGB(255, 255, 255)
         }):Play()
     end)
 
     local function switchPage(pageName)
         for name, pg in pairs(allPages) do
-            pg.Visible = (name == pageName)
+            if name == pageName then
+                pg.Visible = true
+                pg.ScrollingEnabled = true
+            else
+                pg.Visible = false
+            end
         end
         for name, btn in pairs(allPageButtons) do
+            local indicator = allPageIndicators[name]
             if name == pageName then
-                game.TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                game.TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Themes.NewPageColor,
-                    BackgroundTransparency = 0
+                    BackgroundTransparency = 0.1
                 }):Play()
+                if indicator then
+                    game.TweenService:Create(indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 3, 0.6, 0),
+                        BackgroundTransparency = 0
+                    }):Play()
+                end
             else
-                game.TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                game.TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = Themes.MainHeaderColor,
                     BackgroundTransparency = 0.5
                 }):Play()
+                if indicator then
+                    game.TweenService:Create(indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 0, 0.6, 0),
+                        BackgroundTransparency = 1
+                    }):Play()
+                end
             end
         end
         currentPageName = pageName
         if sidebarOpen then
-            game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, 0, 1, 0)
-            }):Play()
-            sidebarOpen = false
+            closeSidebar()
         end
     end
 
@@ -1745,30 +1814,49 @@ function Forums.new(Themes, close_callback)
         pageBtn.BackgroundColor3 = Themes.MainHeaderColor
         pageBtn.BackgroundTransparency = 0.5
         pageBtn.BorderSizePixel = 0
-        pageBtn.Size = UDim2.new(1, 0, 0, 32)
+        pageBtn.Size = UDim2.new(0.9, 0, 0, 30)
         pageBtn.AutoButtonColor = false
         pageBtn.Font = Enum.Font.Gotham
-        pageBtn.Text = pageName
+        pageBtn.Text = "  " .. pageName
         pageBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        pageBtn.TextSize = 12.000
+        pageBtn.TextSize = 11.000
         pageBtn.ZIndex = 21
         pageBtn.ClipsDescendants = true
+        pageBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+        local pageBtnCorner = Instance.new("UICorner")
+        pageBtnCorner.CornerRadius = UDim.new(0, 4)
+        pageBtnCorner.Parent = pageBtn
+
+        local indicator = Instance.new("Frame")
+        indicator.Name = "indicator"
+        indicator.Parent = pageBtn
+        indicator.BackgroundColor3 = Themes.FontColor
+        indicator.BorderSizePixel = 0
+        indicator.Position = UDim2.new(0, 0, 0.2, 0)
+        indicator.Size = UDim2.new(0, 0, 0.6, 0)
+        indicator.ZIndex = 22
+        indicator.BackgroundTransparency = 1
+        local indicatorCorner = Instance.new("UICorner")
+        indicatorCorner.CornerRadius = UDim.new(0, 2)
+        indicatorCorner.Parent = indicator
 
         allPageButtons[pageName] = pageBtn
+        allPageIndicators[pageName] = indicator
 
         pageBtn.MouseButton1Click:Connect(function()
             switchPage(pageName)
         end)
         pageBtn.MouseEnter:Connect(function()
             if currentPageName ~= pageName then
-                game.TweenService:Create(pageBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                game.TweenService:Create(pageBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundTransparency = 0.2
                 }):Play()
             end
         end)
         pageBtn.MouseLeave:Connect(function()
             if currentPageName ~= pageName then
-                game.TweenService:Create(pageBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                game.TweenService:Create(pageBtn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundTransparency = 0.5
                 }):Play()
             end
