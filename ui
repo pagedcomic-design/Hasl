@@ -1706,11 +1706,12 @@ function Forums.new(Themes, close_callback)
             
             local ColorPickerFunc = {}
             local cOpened = false
-            local colorR, colorG, colorB = math.floor(defaultColor.R * 255), math.floor(defaultColor.G * 255), math.floor(defaultColor.B * 255)
+            local hue, sat, val = defaultColor:ToHSV()
 
             local cpFrame = Instance.new("Frame")
             local cpOpen = Instance.new("TextButton")
             local ms = game:GetService("Players").LocalPlayer:GetMouse()
+            local uis = game:GetService("UserInputService")
             local cpInf = Instance.new("TextLabel")
             local tri = Instance.new("ImageLabel")
             local Sample = Instance.new("ImageLabel")
@@ -1849,143 +1850,145 @@ function Forums.new(Themes, close_callback)
             cpList.SortOrder = Enum.SortOrder.LayoutOrder
             cpList.Padding = UDim.new(0, 5)
 
+            local mapBg = Instance.new("TextButton")
+            mapBg.Name = "SatValMap"
+            mapBg.Parent = cpFrame
+            mapBg.Size = UDim2.new(0, 464, 0, 120)
+            mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+            mapBg.AutoButtonColor = false
+            mapBg.Text = ""
+        
+            local whiteLayer = Instance.new("Frame")
+            whiteLayer.Size = UDim2.new(1,0,1,0)
+            whiteLayer.Parent = mapBg
+            whiteLayer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            whiteLayer.BorderSizePixel = 0
+            local whiteGradient = Instance.new("UIGradient")
+            whiteGradient.Parent = whiteLayer
+            whiteGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0),
+                NumberSequenceKeypoint.new(1, 1)
+            })
+        
+            local blackLayer = Instance.new("Frame")
+            blackLayer.Size = UDim2.new(1,0,1,0)
+            blackLayer.Parent = mapBg
+            blackLayer.BackgroundColor3 = Color3.fromRGB(0,0,0)
+            blackLayer.BorderSizePixel = 0
+            local blackGradient = Instance.new("UIGradient")
+            blackGradient.Parent = blackLayer
+            blackGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(1, 0)
+            })
+            blackGradient.Rotation = 90
+        
+            local mapPointer = Instance.new("Frame")
+            mapPointer.Size = UDim2.new(0, 8, 0, 8)
+            mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+            mapPointer.AnchorPoint = Vector2.new(0.5, 0.5)
+            mapPointer.Parent = mapBg
+            mapPointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            mapPointer.BorderColor3 = Color3.fromRGB(0,0,0)
+            Instance.new("UICorner", mapPointer).CornerRadius = UDim.new(1, 0)
+        
+            local hueSlider = Instance.new("TextButton")
+            hueSlider.Size = UDim2.new(0, 464, 0, 15)
+            hueSlider.Parent = cpFrame
+            hueSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            hueSlider.AutoButtonColor = false
+            hueSlider.Text = ""
+        
+            local hueGradient = Instance.new("UIGradient")
+            hueGradient.Parent = hueSlider
+            hueGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+            })
+        
+            local huePointer = Instance.new("Frame")
+            huePointer.Size = UDim2.new(0, 4, 1, 0)
+            huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
+            huePointer.AnchorPoint = Vector2.new(0.5, 0)
+            huePointer.Parent = hueSlider
+            huePointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            huePointer.BorderColor3 = Color3.fromRGB(0,0,0)
+        
             local function updateColor()
-                local newColor = Color3.fromRGB(colorR, colorG, colorB)
+                local newColor = Color3.fromHSV(hue, sat, val)
                 colorBox.BackgroundColor3 = newColor
+                mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
                 callback(newColor)
             end
-
-            local function createColorSlider(axisName, minvalue, maxvalue, currentVal)
-                local sliderFrame = Instance.new("TextButton")
-                local Sample_2 = Instance.new("ImageLabel")
-                local sliderText = Instance.new("TextLabel")
-                local sliderText_2 = Instance.new("TextLabel")
-                local SliderButton = Instance.new("TextButton")
-                local sliderDrag = Instance.new("Frame")
-                local uiLayout = Instance.new("UIListLayout")
-
-                sliderFrame.Name = axisName .. "Slider"
-                sliderFrame.Parent = cpFrame
-                sliderFrame.BackgroundColor3 = Themes.Color
-                sliderFrame.BorderColor3 = Color3.fromRGB(30, 30, 30)
-                sliderFrame.ClipsDescendants = true
-                sliderFrame.Size = UDim2.new(0, 464, 0, 32)
-                sliderFrame.AutoButtonColor = false
-                sliderFrame.Font = Enum.Font.SourceSans
-                sliderFrame.Text = ""
-                sliderFrame.TextColor3 = Color3.fromRGB(0, 0, 0)
-                sliderFrame.TextSize = 14.000
-
-                Sample_2.Name = "Sample"
-                Sample_2.Parent = sliderFrame
-                Sample_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Sample_2.BackgroundTransparency = 1.000
-                Sample_2.ZIndex = 2
-                Sample_2.Image = "http://www.roblox.com/asset/?id=4560909609"
-                Sample_2.ImageColor3 = Themes.SampleColor
-                Sample_2.ImageTransparency = 0.600
-
-                sliderText.Name = "sliderText"
-                sliderText.Parent = sliderFrame
-                sliderText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                sliderText.BackgroundTransparency = 1.000
-                sliderText.Position = UDim2.new(0.01774057, 0, 0.200000182, 0)
-                sliderText.Size = UDim2.new(0, 175, 0, 18)
-                sliderText.ZIndex = 5
-                sliderText.Font = Enum.Font.Gotham
-                sliderText.Text = axisName
-                sliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                sliderText.TextSize = 14.000
-                sliderText.TextXAlignment = Enum.TextXAlignment.Left
-
-                sliderText_2.Name = "sliderText_2"
-                sliderText_2.Parent = sliderFrame
-                sliderText_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                sliderText_2.BackgroundTransparency = 1.000
-                sliderText_2.Position = UDim2.new(0.907649934, 0, 0.200000763, 0)
-                sliderText_2.Size = UDim2.new(0, 34, 0, 18)
-                sliderText_2.ZIndex = 5
-                sliderText_2.Font = Enum.Font.Gotham
-                sliderText_2.Text = currentVal
-                sliderText_2.TextColor3 = Themes.FontColor
-                sliderText_2.TextSize = 14.000
-                sliderText_2.TextXAlignment = Enum.TextXAlignment.Right
-
-                SliderButton.Name = "SliderButton"
-                SliderButton.Parent = sliderFrame
-                SliderButton.BackgroundColor3 = Themes.SliderButtonColor
-                SliderButton.BorderColor3 = Themes.SliderButtonColor
-                SliderButton.Position = UDim2.new(0.397000015, 0, 0.405999988, 0)
-                SliderButton.Size = UDim2.new(0, 215, 0, 6)
-                SliderButton.AutoButtonColor = false
-                SliderButton.Font = Enum.Font.SourceSans
-                SliderButton.Text = ""
-                SliderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-                SliderButton.TextSize = 14.000
-
-                sliderDrag.Name = "sliderDrag"
-                sliderDrag.Parent = SliderButton
-                sliderDrag.BackgroundColor3 = Themes.SliderColor
-                sliderDrag.BorderSizePixel = 0
-                sliderDrag.Position = UDim2.new(0, 0, -0.166666672, 0)
-                
-                local percentage = math.clamp((currentVal - minvalue) / (maxvalue - minvalue), 0, 1)
-                sliderDrag.Size = UDim2.new(percentage, 0, 0, 8)
-                sliderDrag.ZIndex = 6
-
-                uiLayout.Parent = SliderButton
-                uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                uiLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-                local uis = game:GetService("UserInputService")
-                local dragging = false
-                SliderButton.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        dragging = true
-                        local function update(input)
-                            local movePos = input.Position.X - SliderButton.AbsolutePosition.X
-                            local pct = math.clamp(movePos / SliderButton.AbsoluteSize.X, 0, 1)
-                            local Value = math.floor(minvalue + (maxvalue - minvalue) * pct)
-                            sliderText_2.Text = tostring(Value)
-                            sliderDrag:TweenSize(UDim2.new(pct, 0, 0, 8), "Out", "Quad", 0.1, true)
-                            if axisName == "R" then colorR = Value
-                            elseif axisName == "G" then colorG = Value
-                            elseif axisName == "B" then colorB = Value end
-                            pcall(updateColor)
-                        end
-                        update(input)
-                        local moveConn, releaseConn
-                        moveConn = uis.InputChanged:Connect(function(input)
-                            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                                update(input)
-                            end
-                        end)
-                        releaseConn = uis.InputEnded:Connect(function(input)
-                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                                dragging = false
-                                if moveConn then moveConn:Disconnect() end
-                                if releaseConn then releaseConn:Disconnect() end
-                            end
-                        end)
+        
+            local mapDragging = false
+            mapBg.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    mapDragging = true
+                    local function moveMap(pos)
+                        local relX = math.clamp(pos.X - mapBg.AbsolutePosition.X, 0, mapBg.AbsoluteSize.X)
+                        local relY = math.clamp(pos.Y - mapBg.AbsolutePosition.Y, 0, mapBg.AbsoluteSize.Y)
+                        sat = relX / mapBg.AbsoluteSize.X
+                        val = 1 - (relY / mapBg.AbsoluteSize.Y)
+                        mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+                        updateColor()
                     end
-                end)
-                sliderFrame.MouseEnter:Connect(function()
-                    game.TweenService:Create(sliderFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.MouseEnterColor }):Play()
-                end)
-                sliderFrame.MouseLeave:Connect(function()
-                    game.TweenService:Create(sliderFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.Color }):Play()
-                end)
-                
-                return sliderFrame
-            end
-
-            createColorSlider("R", 0, 255, colorR)
-            createColorSlider("G", 0, 255, colorG)
-            createColorSlider("B", 0, 255, colorB)
-
+                    moveMap(input.Position)
+                    
+                    local moveConn, releaseConn
+                    moveConn = uis.InputChanged:Connect(function(input2)
+                        if mapDragging and (input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch) then
+                            moveMap(input2.Position)
+                        end
+                    end)
+                    releaseConn = uis.InputEnded:Connect(function(input2)
+                        if input2.UserInputType == Enum.UserInputType.MouseButton1 or input2.UserInputType == Enum.UserInputType.Touch then
+                            mapDragging = false
+                            if moveConn then moveConn:Disconnect() end
+                            if releaseConn then releaseConn:Disconnect() end
+                        end
+                    end)
+                end
+            end)
+        
+            local hueDragging = false
+            hueSlider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    hueDragging = true
+                    local function moveHue(pos)
+                        local relX = math.clamp(pos.X - hueSlider.AbsolutePosition.X, 0, hueSlider.AbsoluteSize.X)
+                        hue = 1 - (relX / hueSlider.AbsoluteSize.X)
+                        huePointer.Position = UDim2.new(relX / hueSlider.AbsoluteSize.X, 0, 0, 0)
+                        updateColor()
+                    end
+                    moveHue(input.Position)
+                    
+                    local moveConn, releaseConn
+                    moveConn = uis.InputChanged:Connect(function(input2)
+                        if hueDragging and (input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch) then
+                            moveHue(input2.Position)
+                        end
+                    end)
+                    releaseConn = uis.InputEnded:Connect(function(input2)
+                        if input2.UserInputType == Enum.UserInputType.MouseButton1 or input2.UserInputType == Enum.UserInputType.Touch then
+                            hueDragging = false
+                            if moveConn then moveConn:Disconnect() end
+                            if releaseConn then releaseConn:Disconnect() end
+                        end
+                    end)
+                end
+            end)
+        
             function ColorPickerFunc:Update(newColor)
-                colorR, colorG, colorB = math.floor(newColor.R * 255), math.floor(newColor.G * 255), math.floor(newColor.B * 255)
+                hue, sat, val = newColor:ToHSV()
                 updateColor()
+                mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+                huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
             end
 
             return ColorPickerFunc
@@ -3042,11 +3045,12 @@ function Forums.new(Themes, close_callback)
                 
                 local ColorPickerFunc = {}
                 local cOpened = false
-                local colorR, colorG, colorB = math.floor(defaultColor.R * 255), math.floor(defaultColor.G * 255), math.floor(defaultColor.B * 255)
+                local hue, sat, val = defaultColor:ToHSV()
 
                 local cpFrame = Instance.new("Frame")
                 local cpOpen = Instance.new("TextButton")
                 local ms = game:GetService("Players").LocalPlayer:GetMouse()
+                local uis = game:GetService("UserInputService")
                 local cpInf = Instance.new("TextLabel")
                 local tri = Instance.new("ImageLabel")
                 local Sample = Instance.new("ImageLabel")
@@ -3185,147 +3189,150 @@ function Forums.new(Themes, close_callback)
                 cpList.SortOrder = Enum.SortOrder.LayoutOrder
                 cpList.Padding = UDim.new(0, 5)
 
+                local mapBg = Instance.new("TextButton")
+                mapBg.Name = "SatValMap"
+                mapBg.Parent = cpFrame
+                mapBg.Size = UDim2.new(0, 464, 0, 120)
+                mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+                mapBg.AutoButtonColor = false
+                mapBg.Text = ""
+            
+                local whiteLayer = Instance.new("Frame")
+                whiteLayer.Size = UDim2.new(1,0,1,0)
+                whiteLayer.Parent = mapBg
+                whiteLayer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+                whiteLayer.BorderSizePixel = 0
+                local whiteGradient = Instance.new("UIGradient")
+                whiteGradient.Parent = whiteLayer
+                whiteGradient.Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
+            
+                local blackLayer = Instance.new("Frame")
+                blackLayer.Size = UDim2.new(1,0,1,0)
+                blackLayer.Parent = mapBg
+                blackLayer.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                blackLayer.BorderSizePixel = 0
+                local blackGradient = Instance.new("UIGradient")
+                blackGradient.Parent = blackLayer
+                blackGradient.Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(1, 0)
+                })
+                blackGradient.Rotation = 90
+            
+                local mapPointer = Instance.new("Frame")
+                mapPointer.Size = UDim2.new(0, 8, 0, 8)
+                mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+                mapPointer.AnchorPoint = Vector2.new(0.5, 0.5)
+                mapPointer.Parent = mapBg
+                mapPointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+                mapPointer.BorderColor3 = Color3.fromRGB(0,0,0)
+                Instance.new("UICorner", mapPointer).CornerRadius = UDim.new(1, 0)
+            
+                local hueSlider = Instance.new("TextButton")
+                hueSlider.Size = UDim2.new(0, 464, 0, 15)
+                hueSlider.Parent = cpFrame
+                hueSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
+                hueSlider.AutoButtonColor = false
+                hueSlider.Text = ""
+            
+                local hueGradient = Instance.new("UIGradient")
+                hueGradient.Parent = hueSlider
+                hueGradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                    ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                    ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                    ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                    ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+                })
+            
+                local huePointer = Instance.new("Frame")
+                huePointer.Size = UDim2.new(0, 4, 1, 0)
+                huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
+                huePointer.AnchorPoint = Vector2.new(0.5, 0)
+                huePointer.Parent = hueSlider
+                huePointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
+                huePointer.BorderColor3 = Color3.fromRGB(0,0,0)
+            
                 local function updateColor()
-                    local newColor = Color3.fromRGB(colorR, colorG, colorB)
+                    local newColor = Color3.fromHSV(hue, sat, val)
                     colorBox.BackgroundColor3 = newColor
+                    mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
                     callback(newColor)
                 end
-
-                local function createColorSlider(axisName, minvalue, maxvalue, currentVal)
-                    local sliderFrame = Instance.new("TextButton")
-                    local Sample_2 = Instance.new("ImageLabel")
-                    local sliderText = Instance.new("TextLabel")
-                    local sliderText_2 = Instance.new("TextLabel")
-                    local SliderButton = Instance.new("TextButton")
-                    local sliderDrag = Instance.new("Frame")
-                    local uiLayout = Instance.new("UIListLayout")
-
-                    sliderFrame.Name = axisName .. "Slider"
-                    sliderFrame.Parent = cpFrame
-                    sliderFrame.BackgroundColor3 = Themes.Color
-                    sliderFrame.BorderColor3 = Color3.fromRGB(30, 30, 30)
-                    sliderFrame.ClipsDescendants = true
-                    sliderFrame.Size = UDim2.new(0, 464, 0, 32)
-                    sliderFrame.AutoButtonColor = false
-                    sliderFrame.Font = Enum.Font.SourceSans
-                    sliderFrame.Text = ""
-                    sliderFrame.TextColor3 = Color3.fromRGB(0, 0, 0)
-                    sliderFrame.TextSize = 14.000
-
-                    Sample_2.Name = "Sample"
-                    Sample_2.Parent = sliderFrame
-                    Sample_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    Sample_2.BackgroundTransparency = 1.000
-                    Sample_2.ZIndex = 2
-                    Sample_2.Image = "http://www.roblox.com/asset/?id=4560909609"
-                    Sample_2.ImageColor3 = Themes.SampleColor
-                    Sample_2.ImageTransparency = 0.600
-
-                    sliderText.Name = "sliderText"
-                    sliderText.Parent = sliderFrame
-                    sliderText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    sliderText.BackgroundTransparency = 1.000
-                    sliderText.Position = UDim2.new(0.01774057, 0, 0.200000182, 0)
-                    sliderText.Size = UDim2.new(0, 175, 0, 18)
-                    sliderText.ZIndex = 5
-                    sliderText.Font = Enum.Font.Gotham
-                    sliderText.Text = axisName
-                    sliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                    sliderText.TextSize = 14.000
-                    sliderText.TextXAlignment = Enum.TextXAlignment.Left
-
-                    sliderText_2.Name = "sliderText_2"
-                    sliderText_2.Parent = sliderFrame
-                    sliderText_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    sliderText_2.BackgroundTransparency = 1.000
-                    sliderText_2.Position = UDim2.new(0.907649934, 0, 0.200000763, 0)
-                    sliderText_2.Size = UDim2.new(0, 34, 0, 18)
-                    sliderText_2.ZIndex = 5
-                    sliderText_2.Font = Enum.Font.Gotham
-                    sliderText_2.Text = currentVal
-                    sliderText_2.TextColor3 = Themes.FontColor
-                    sliderText_2.TextSize = 14.000
-                    sliderText_2.TextXAlignment = Enum.TextXAlignment.Right
-
-                    SliderButton.Name = "SliderButton"
-                    SliderButton.Parent = sliderFrame
-                    SliderButton.BackgroundColor3 = Themes.SliderButtonColor
-                    SliderButton.BorderColor3 = Themes.SliderButtonColor
-                    SliderButton.Position = UDim2.new(0.397000015, 0, 0.405999988, 0)
-                    SliderButton.Size = UDim2.new(0, 215, 0, 6)
-                    SliderButton.AutoButtonColor = false
-                    SliderButton.Font = Enum.Font.SourceSans
-                    SliderButton.Text = ""
-                    SliderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-                    SliderButton.TextSize = 14.000
-
-                    sliderDrag.Name = "sliderDrag"
-                    sliderDrag.Parent = SliderButton
-                    sliderDrag.BackgroundColor3 = Themes.SliderColor
-                    sliderDrag.BorderSizePixel = 0
-                    sliderDrag.Position = UDim2.new(0, 0, -0.166666672, 0)
-                    
-                    local percentage = math.clamp((currentVal - minvalue) / (maxvalue - minvalue), 0, 1)
-                    sliderDrag.Size = UDim2.new(percentage, 0, 0, 8)
-                    sliderDrag.ZIndex = 6
-
-                    uiLayout.Parent = SliderButton
-                    uiLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                    uiLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-                    local uis = game:GetService("UserInputService")
-                    local dragging = false
-                    SliderButton.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            dragging = true
-                            local function update(input)
-                                local movePos = input.Position.X - SliderButton.AbsolutePosition.X
-                                local pct = math.clamp(movePos / SliderButton.AbsoluteSize.X, 0, 1)
-                                local Value = math.floor(minvalue + (maxvalue - minvalue) * pct)
-                                sliderText_2.Text = tostring(Value)
-                                sliderDrag:TweenSize(UDim2.new(pct, 0, 0, 8), "Out", "Quad", 0.1, true)
-                                if axisName == "R" then colorR = Value
-                                elseif axisName == "G" then colorG = Value
-                                elseif axisName == "B" then colorB = Value end
-                                pcall(updateColor)
-                            end
-                            update(input)
-                            local moveConn, releaseConn
-                            moveConn = uis.InputChanged:Connect(function(input)
-                                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                                    update(input)
-                                end
-                            end)
-                            releaseConn = uis.InputEnded:Connect(function(input)
-                                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                                    dragging = false
-                                    if moveConn then moveConn:Disconnect() end
-                                    if releaseConn then releaseConn:Disconnect() end
-                                end
-                            end)
+            
+                local mapDragging = false
+                mapBg.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        mapDragging = true
+                        local function moveMap(pos)
+                            local relX = math.clamp(pos.X - mapBg.AbsolutePosition.X, 0, mapBg.AbsoluteSize.X)
+                            local relY = math.clamp(pos.Y - mapBg.AbsolutePosition.Y, 0, mapBg.AbsoluteSize.Y)
+                            sat = relX / mapBg.AbsoluteSize.X
+                            val = 1 - (relY / mapBg.AbsoluteSize.Y)
+                            mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+                            updateColor()
                         end
-                    end)
-                    sliderFrame.MouseEnter:Connect(function()
-                        game.TweenService:Create(sliderFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.MouseEnterColor }):Play()
-                    end)
-                    sliderFrame.MouseLeave:Connect(function()
-                        game.TweenService:Create(sliderFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.Color }):Play()
-                    end)
-                    
-                    return sliderFrame
-                end
-
-                createColorSlider("R", 0, 255, colorR)
-                createColorSlider("G", 0, 255, colorG)
-                createColorSlider("B", 0, 255, colorB)
-
+                        moveMap(input.Position)
+                        
+                        local moveConn, releaseConn
+                        moveConn = uis.InputChanged:Connect(function(input2)
+                            if mapDragging and (input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch) then
+                                moveMap(input2.Position)
+                            end
+                        end)
+                        releaseConn = uis.InputEnded:Connect(function(input2)
+                            if input2.UserInputType == Enum.UserInputType.MouseButton1 or input2.UserInputType == Enum.UserInputType.Touch then
+                                mapDragging = false
+                                if moveConn then moveConn:Disconnect() end
+                                if releaseConn then releaseConn:Disconnect() end
+                            end
+                        end)
+                    end
+                end)
+            
+                local hueDragging = false
+                hueSlider.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        hueDragging = true
+                        local function moveHue(pos)
+                            local relX = math.clamp(pos.X - hueSlider.AbsolutePosition.X, 0, hueSlider.AbsoluteSize.X)
+                            hue = 1 - (relX / hueSlider.AbsoluteSize.X)
+                            huePointer.Position = UDim2.new(relX / hueSlider.AbsoluteSize.X, 0, 0, 0)
+                            updateColor()
+                        end
+                        moveHue(input.Position)
+                        
+                        local moveConn, releaseConn
+                        moveConn = uis.InputChanged:Connect(function(input2)
+                            if hueDragging and (input2.UserInputType == Enum.UserInputType.MouseMovement or input2.UserInputType == Enum.UserInputType.Touch) then
+                                moveHue(input2.Position)
+                            end
+                        end)
+                        releaseConn = uis.InputEnded:Connect(function(input2)
+                            if input2.UserInputType == Enum.UserInputType.MouseButton1 or input2.UserInputType == Enum.UserInputType.Touch then
+                                hueDragging = false
+                                if moveConn then moveConn:Disconnect() end
+                                if releaseConn then releaseConn:Disconnect() end
+                            end
+                        end)
+                    end
+                end)
+            
                 function ColorPickerFunc:Update(newColor)
-                    colorR, colorG, colorB = math.floor(newColor.R * 255), math.floor(newColor.G * 255), math.floor(newColor.B * 255)
+                    hue, sat, val = newColor:ToHSV()
                     updateColor()
+                    mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
+                    huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
                 end
 
                 return ColorPickerFunc
             end
+
 
             function fElements:Seperator()
                 local seperator = Instance.new("Frame")
