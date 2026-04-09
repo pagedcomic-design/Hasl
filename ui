@@ -314,12 +314,12 @@ function Forums.new(Themes, close_callback)
 
     local sidebar = Instance.new("Frame")
     sidebar.Name = "sidebar"
-    sidebar.Parent = Main
+    sidebar.Parent = containerHolder
     sidebar.BackgroundColor3 = Themes.MainHeaderColor
     sidebar.BorderSizePixel = 0
     sidebar.ClipsDescendants = true
-    sidebar.Position = UDim2.new(0, 0, 0, 36)
-    sidebar.Size = UDim2.new(0, 0, 1, -36)
+    sidebar.Position = UDim2.new(0, 0, 0, 0)
+    sidebar.Size = UDim2.new(0, 0, 1, 0)
     sidebar.ZIndex = 20
 
     local sidebarList = Instance.new("UIListLayout")
@@ -337,12 +337,12 @@ function Forums.new(Themes, close_callback)
     menuBtn.MouseButton1Click:Connect(function()
         if sidebarOpen then
             game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, 0, 1, -36)
+                Size = UDim2.new(0, 0, 1, 0)
             }):Play()
             sidebarOpen = false
         else
             game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, sidebarWidth, 1, -36)
+                Size = UDim2.new(0, sidebarWidth, 1, 0)
             }):Play()
             sidebarOpen = true
         end
@@ -378,7 +378,7 @@ function Forums.new(Themes, close_callback)
         currentPageName = pageName
         if sidebarOpen then
             game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-                Size = UDim2.new(0, 0, 1, -36)
+                Size = UDim2.new(0, 0, 1, 0)
             }):Play()
             sidebarOpen = false
         end
