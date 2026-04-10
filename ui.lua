@@ -160,6 +160,7 @@ function library.new(library, name, theme)
     local beijingColor = Color3_fromRGB(57, 57, 57)
   
     local dogent = Instance_new("ScreenGui")
+    dogent.IgnoreGuiInset = true
     dogent.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
     local Main = Instance_new("Frame")
@@ -406,18 +407,16 @@ function library.new(library, name, theme)
 
     services.UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local mPos = input.Position
-            local inset = services.GuiService:GetGuiInset()
             if draggingSV then
                 local r = SVMap.AbsoluteSize
                 local p = SVMap.AbsolutePosition
-                CurrentCP_S = math.clamp((mPos.X - p.X) / r.X, 0, 1)
-                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y - inset.Y) / r.Y), 0, 1)
+                CurrentCP_S = math.clamp((input.Position.X - p.X) / r.X, 0, 1)
+                CurrentCP_V = math.clamp(1 - ((input.Position.Y - p.Y) / r.Y), 0, 1)
                 updateCP()
             elseif draggingHue then
                 local r = HueSlider.AbsoluteSize
                 local p = HueSlider.AbsolutePosition
-                CurrentCP_H = math.clamp((mPos.X - p.X) / r.X, 0, 1)
+                CurrentCP_H = math.clamp((input.Position.X - p.X) / r.X, 0, 1)
                 updateCP()
             end
         end
