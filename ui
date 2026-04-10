@@ -102,7 +102,7 @@ function UIMinimize()
 	if minimized then
 		game.TweenService:Create(gethui()[getgenv().libName].shadow.Main,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(0, 650, 0, 420)
+		Size = UDim2.new(0, 486, 0, 283)
 		}):Play()
 		task.wait()
 		game.TweenService:Create(gethui()[getgenv().libName].shadow,
@@ -214,7 +214,7 @@ shadow.Parent = _81asf91z9asf1
 shadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 shadow.BackgroundTransparency = 1.000
 shadow.Position = UDim2.new(0.377575755, 0, 0.382281542, 0)
-shadow.Size = UDim2.new(0, 700, 0, 450)
+shadow.Size = UDim2.new(0, 539, 0, 317)
 shadow.ZIndex = 0
 shadow.ImageTransparency = 1
 shadow.Image = "rbxassetid://4996891970"
@@ -226,7 +226,7 @@ Main.BackgroundColor3 = Themes.MainColor
 Main.BorderColor3 = Color3.fromRGB(27, 27, 27)
 Main.ClipsDescendants = true
 Main.Position = UDim2.new(0.361818194, 0, 0.354368925, 0)
-Main.Size = UDim2.new(0, 650, 0, 420)
+Main.Size = UDim2.new(0, 0, 0, 0) --0, 486, 0, 283
 Main.Active = true
 header.Name = "header"
 header.Parent = Main
@@ -235,16 +235,25 @@ header.BorderSizePixel = 0
 header.ClipsDescendants = true
 header.Size = UDim2.new(1.00000012, 0, -0.00295740133, 36)
 
-	-- Persistent Sidebar initialization
-	local sidebar = Instance.new("Frame")
-	sidebar.Name = "sidebar"
-	sidebar.Parent = Main
-	sidebar.BackgroundColor3 = Themes.MainHeaderColor
-	sidebar.BorderSizePixel = 0
-	sidebar.ClipsDescendants = true
-	sidebar.Position = UDim2.new(0, 0, 0, 36)
-	sidebar.Size = UDim2.new(0, 140, 1, -36)
-	sidebar.ZIndex = 20
+	local menuBtn = Instance.new("TextButton")
+	menuBtn.Name = "menuBtn"
+	menuBtn.Parent = header
+	menuBtn.BackgroundTransparency = 1.000
+	menuBtn.Position = UDim2.new(0, 10, 0, 8)
+	menuBtn.Size = UDim2.new(0, 20, 0, 20)
+	menuBtn.ZIndex = 11
+	menuBtn.Text = ""
+
+	for i = 1, 3 do
+		local line = Instance.new("Frame")
+		line.Name = "line_" .. i
+		line.Parent = menuBtn
+		line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		line.BorderSizePixel = 0
+		line.Position = UDim2.new(0, 0, 0, (i - 1) * 7)
+		line.Size = UDim2.new(1, 0, 0, 2)
+		line.ZIndex = 12
+	end
 
 title.Name = "title"
 title.Parent = header
@@ -314,11 +323,57 @@ containerHolder.Size = UDim2.new(0, 485, 0, 247)
 pages.Name = "pages"
 pages.Parent = containerHolder
 
+	local sidebar = Instance.new("Frame")
+	sidebar.Name = "sidebar"
+	sidebar.Parent = containerHolder
+	sidebar.BackgroundColor3 = Themes.MainHeaderColor
+	sidebar.BorderSizePixel = 0
+	sidebar.ClipsDescendants = true
+	sidebar.Position = UDim2.new(0, 0, 0, 0)
+	sidebar.Size = UDim2.new(0, 0, 1, 0)
+	sidebar.ZIndex = 20
+
+	local sidebarPadding = Instance.new("UIPadding")
+	sidebarPadding.Parent = sidebar
+	sidebarPadding.PaddingLeft = UDim.new(0, 5)
+	sidebarPadding.PaddingRight = UDim.new(0, 5)
+	sidebarPadding.PaddingTop = UDim.new(0, 8)
+
+	local sidebarList = Instance.new("UIListLayout")
+	sidebarList.Parent = sidebar
+	sidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
+	sidebarList.Padding = UDim.new(0, 5)
+
+local sidebarOpen = false
+local sidebarWidth = 140
 local allPages = {}
 local allPageButtons = {}
 local currentPageName = nil
 
--- Toggle logic removed
+menuBtn.MouseButton1Click:Connect(function()
+if sidebarOpen then
+	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+	Size = UDim2.new(0, 0, 1, 0)
+	}):Play()
+	sidebarOpen = false
+else
+	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+	Size = UDim2.new(0, sidebarWidth, 1, 0)
+	}):Play()
+	sidebarOpen = true
+end
+end)
+menuBtn.MouseEnter:Connect(function()
+game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+ImageColor3 = Color3.fromRGB(200, 200, 200)
+}):Play()
+end)
+menuBtn.MouseLeave:Connect(function()
+game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+ImageColor3 = Color3.fromRGB(255, 255, 255)
+}):Play()
+end)
 
 local function switchPage(pageName)
 for name, pg in pairs(allPages) do
@@ -338,7 +393,12 @@ for name, btn in pairs(allPageButtons) do
 	end
 end
 currentPageName = pageName
--- Page switch without sidebar toggle
+if sidebarOpen then
+	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+	Size = UDim2.new(0, 0, 1, 0)
+	}):Play()
+	sidebarOpen = false
+end
 end
 
 UIListLayout_2.Parent = shadow
@@ -347,7 +407,7 @@ UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Center
 
 game.TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-Size = UDim2.new(0, 650, 0, 420)
+Size = UDim2.new(0, 486, 0, 283)
 }):Play()
 task.wait()
 game.TweenService:Create(shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
@@ -1307,47 +1367,33 @@ function fElements:NewDropdown(title, list, callback)
 		dOpened = false
 		game.TweenService:Create(dropFrame,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(1, 0, 0, 32)
+		Size = UDim2.new(0, 474, 0, 32)
 		}):Play()
 		game.TweenService:Create(expand_more,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
 		Rotation = 0
 		}):Play()
-		-- Folder Closed State: Hollow / White Border
-		game.TweenService:Create(dropOpen, TweenInfo.new(0.1), {
-			BackgroundTransparency = 1,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		}):Play()
-		game.TweenService:Create(dropInf, TweenInfo.new(0.1), {
-			TextColor3 = Color3.fromRGB(255, 255, 255)
-		}):Play()
 		task.wait(0.1)
 		game.TweenService:Create(sectionMain,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(0, 485, 0, itemsList.AbsoluteContentSize.Y + 5)
+		Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
+		itemsList.AbsoluteContentSize.Y + 5)
 		}):Play()
 	else
 		dOpened = true
 		game.TweenService:Create(dropFrame,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(1, 0, 0, dropList.AbsoluteContentSize.Y + 5)
+		Size = UDim2.new(0, 474, 0, dropList.AbsoluteContentSize.Y + 5)
 		}):Play()
 		game.TweenService:Create(expand_more,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
 		Rotation = 180
 		}):Play()
-		-- Folder Open State: Solid White
-		game.TweenService:Create(dropOpen, TweenInfo.new(0.1), {
-			BackgroundTransparency = 0,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		}):Play()
-		game.TweenService:Create(dropInf, TweenInfo.new(0.1), {
-			TextColor3 = Color3.fromRGB(0, 0, 0)
-		}):Play()
 		task.wait(0.1)
 		game.TweenService:Create(sectionMain,
 		TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(0, 485, 0, itemsList.AbsoluteContentSize.Y + 5)
+		Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0,
+		itemsList.AbsoluteContentSize.Y + 5)
 		}):Play()
 	end
 	local c = Sample:Clone() :: ImageLabel
@@ -2887,18 +2933,12 @@ function fElements:NewDropdown(dTitle, list, callback)
 		dOpened = false
 		game.TweenService:Create(dropFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, 474, 0, 32) }):Play()
 		game.TweenService:Create(expand_more, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Rotation = 0 }):Play()
-		-- Folder Closed State
-		game.TweenService:Create(dropOpen, TweenInfo.new(0.1), { BackgroundTransparency = 1 }):Play()
-		game.TweenService:Create(dropInf, TweenInfo.new(0.1), { TextColor3 = Color3.fromRGB(255, 255, 255) }):Play()
 		task.wait(0.1)
 		game.TweenService:Create(sectionMain, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0, itemsList.AbsoluteContentSize.Y + 5) }):Play()
 	else
 		dOpened = true
 		game.TweenService:Create(dropFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, 474, 0, dropList.AbsoluteContentSize.Y + 5) }):Play()
 		game.TweenService:Create(expand_more, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Rotation = 180 }):Play()
-		-- Folder Open State
-		game.TweenService:Create(dropOpen, TweenInfo.new(0.1), { BackgroundTransparency = 0 }):Play()
-		game.TweenService:Create(dropInf, TweenInfo.new(0.1), { TextColor3 = Color3.fromRGB(0, 0, 0) }):Play()
 		task.wait(0.1)
 		game.TweenService:Create(sectionMain, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, itemsList.AbsoluteContentSize.X, 0, itemsList.AbsoluteContentSize.Y + 5) }):Play()
 	end
