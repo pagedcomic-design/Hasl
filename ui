@@ -189,6 +189,8 @@ function library.new(library, name, theme)
     local CurrentCP_Callback = nil
     local OriginalCP_Color = nil
     local CP_Open = false
+    local IsDraggingPicker = false
+
 
 
 
@@ -262,18 +264,26 @@ function library.new(library, name, theme)
     VGFC.Parent = ValGFrame
     ValGFrame.Parent = SVMap
     
+    local SVBtn = Instance_new("TextButton")
+    SVBtn.Size = UDim2_new(1, 0, 1, 0)
+    SVBtn.BackgroundTransparency = 1
+    SVBtn.Text = ""
+    SVBtn.ZIndex = 999995
+    SVBtn.Parent = SVMap
+
     local SVPointer = Instance_new("Frame")
     SVPointer.Size = UDim2_new(0, 10, 0, 10)
     SVPointer.AnchorPoint = Vector2.new(0.5, 0.5)
     SVPointer.BackgroundTransparency = 1
-    SVPointer.ZIndex = 999995
+    SVPointer.ZIndex = 999996
     local SVPointerImg = Instance_new("ImageLabel")
     SVPointerImg.Size = UDim2_new(1, 0, 1, 0)
     SVPointerImg.BackgroundTransparency = 1
     SVPointerImg.Image = "rbxassetid://4975593836"
-    SVPointerImg.ZIndex = 999996
+    SVPointerImg.ZIndex = 999997
     SVPointerImg.Parent = SVPointer
     SVPointer.Parent = SVMap
+
 
     local HueSlider = Instance_new("Frame")
     HueSlider.Position = UDim2_new(0, 10, 0, 175)
@@ -295,7 +305,15 @@ function library.new(library, name, theme)
     HueG.Parent = HueSlider
     HueSlider.Parent = ColorPickerPopup
 
+    local HueBtn = Instance_new("TextButton")
+    HueBtn.Size = UDim2_new(1, 0, 1, 0)
+    HueBtn.BackgroundTransparency = 1
+    HueBtn.Text = ""
+    HueBtn.ZIndex = 999995
+    HueBtn.Parent = HueSlider
+
     local HuePointer = Instance_new("Frame")
+
     HuePointer.Size = UDim2_new(0, 4, 1, 4)
     HuePointer.Position = UDim2_new(0, 0, 0.5, 0)
     HuePointer.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -350,23 +368,29 @@ function library.new(library, name, theme)
 
 
     local draggingSV = false
-    SVMap.InputBegan:Connect(function(input)
+    SVBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSV = true
+            IsDraggingPicker = true
         end
     end)
     local draggingHue = false
-    HueSlider.InputBegan:Connect(function(input)
+    HueBtn.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingHue = true
+            IsDraggingPicker = true
         end
     end)
     services.UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSV = false
             draggingHue = false
+            task.delay(0.1, function()
+                IsDraggingPicker = false
+            end)
         end
     end)
+
     services.UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             if draggingSV then
@@ -385,6 +409,7 @@ function library.new(library, name, theme)
     end)
 
     local function closeCP(apply)
+        if IsDraggingPicker then return end -- Prevent closing while dragging
         ColorPickerPopup.Visible = false
         ColorPickerMask.Visible = false
         if apply and CurrentCP_Callback then
@@ -397,7 +422,12 @@ function library.new(library, name, theme)
 
     ConfirmBtn.MouseButton1Click:Connect(function() closeCP(true) end)
     CancelBtn.MouseButton1Click:Connect(function() closeCP(false) end)
-    ColorPickerMask.MouseButton1Click:Connect(function() closeCP(false) end)
+    ColorPickerMask.MouseButton1Down:Connect(function() 
+        if not IsDraggingPicker then
+            closeCP(false) 
+        end
+    end)
+
 
 
     if syn and syn.protect_gui then
