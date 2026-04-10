@@ -313,21 +313,38 @@ containerHolder.Size = UDim2.new(0, 485, 0, 247)
 pages.Name = "pages"
 pages.Parent = containerHolder
 
-local sidebar = Instance.new("Frame")
-sidebar.Name = "sidebar"
-sidebar.Parent = containerHolder
-sidebar.BackgroundColor3 = Themes.MainHeaderColor
-sidebar.BorderSizePixel = 0
-sidebar.ClipsDescendants = true
-sidebar.Position = UDim2.new(0, 0, 0, 0)
-sidebar.Size = UDim2.new(0, 0, 1, 0)
-sidebar.ZIndex = 20
+	local sidebar = Instance.new("Frame")
+	sidebar.Name = "sidebar"
+	sidebar.Parent = containerHolder
+	sidebar.BackgroundColor3 = Themes.MainHeaderColor
+	sidebar.BorderSizePixel = 0
+	sidebar.ClipsDescendants = true
+	sidebar.Position = UDim2.new(0, 0, 0, 0)
+	sidebar.Size = UDim2.new(0, 0, 1, 0)
+	sidebar.ZIndex = 20
 
-local sidebarList = Instance.new("UIListLayout")
-sidebarList.Parent = sidebar
-sidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
-sidebarList.Padding = UDim.new(0, 2)
+	local sidebarTriangle = Instance.new("ImageLabel")
+	sidebarTriangle.Name = "sidebarTriangle"
+	sidebarTriangle.Parent = sidebar
+	sidebarTriangle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	sidebarTriangle.BackgroundTransparency = 1.000
+	sidebarTriangle.Position = UDim2.new(0, 0, 0, 0)
+	sidebarTriangle.Size = UDim2.new(1, 0, 1, 0)
+	sidebarTriangle.Image = "http://www.roblox.com/asset/?id=6676220228"
+	sidebarTriangle.ImageColor3 = Themes.MainHeaderColorImage
+	sidebarTriangle.ZIndex = 20
+
+	local sidebarPadding = Instance.new("UIPadding")
+	sidebarPadding.Parent = sidebar
+	sidebarPadding.PaddingLeft = UDim.new(0, 10)
+	sidebarPadding.PaddingRight = UDim.new(0, 10)
+	sidebarPadding.PaddingTop = UDim.new(0, 10)
+
+	local sidebarList = Instance.new("UIListLayout")
+	sidebarList.Parent = sidebar
+	sidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
+	sidebarList.Padding = UDim.new(0, 5)
 
 local sidebarOpen = false
 local sidebarWidth = 140
@@ -2074,22 +2091,47 @@ end)
 
 allPages[pageName] = pageScroll
 
-local pageBtn = Instance.new("TextButton")
-pageBtn.Name = pageName
-pageBtn.Parent = sidebar
-pageBtn.BackgroundColor3 = Themes.MainHeaderColor
-pageBtn.BackgroundTransparency = 0.5
-pageBtn.BorderSizePixel = 0
-pageBtn.Size = UDim2.new(1, 0, 0, 32)
-pageBtn.AutoButtonColor = false
-pageBtn.Font = Enum.Font.Gotham
-pageBtn.Text = pageName
-pageBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-pageBtn.TextSize = 12.000
-pageBtn.ZIndex = 21
-pageBtn.ClipsDescendants = true
+	local pageBtn = Instance.new("TextButton")
+	pageBtn.Name = pageName
+	pageBtn.Parent = sidebar
+	pageBtn.BackgroundColor3 = Themes.MainHeaderColor
+	pageBtn.BackgroundTransparency = 0.5
+	pageBtn.BorderSizePixel = 0
+	pageBtn.Size = UDim2.new(1, 0, 0, 38)
+	pageBtn.AutoButtonColor = false
+	pageBtn.Font = Enum.Font.Gotham
+	pageBtn.Text = ""
+	pageBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	pageBtn.TextSize = 14.000
+	pageBtn.ZIndex = 21
+	pageBtn.ClipsDescendants = true
 
-allPageButtons[pageName] = pageBtn
+	local btnIcon = Instance.new("ImageLabel")
+	btnIcon.Name = "btnIcon"
+	btnIcon.Parent = pageBtn
+	btnIcon.BackgroundTransparency = 1.000
+	btnIcon.Position = UDim2.new(0, 8, 0.5, -9)
+	btnIcon.Size = UDim2.new(0, 18, 0, 18)
+	btnIcon.Image = "rbxassetid://3926305904"
+	btnIcon.ImageRectOffset = Vector2.new(36, 284)
+	btnIcon.ImageRectSize = Vector2.new(36, 36)
+	btnIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+	btnIcon.ZIndex = 22
+
+	local btnText = Instance.new("TextLabel")
+	btnText.Name = "btnText"
+	btnText.Parent = pageBtn
+	btnText.BackgroundTransparency = 1.000
+	btnText.Position = UDim2.new(0, 34, 0, 0)
+	btnText.Size = UDim2.new(1, -34, 1, 0)
+	btnText.Font = Enum.Font.Gotham
+	btnText.Text = pageName
+	btnText.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btnText.TextSize = 14.000
+	btnText.TextXAlignment = Enum.TextXAlignment.Left
+	btnText.ZIndex = 22
+
+	allPageButtons[pageName] = pageBtn
 
 pageBtn.MouseButton1Click:Connect(function()
 switchPage(pageName)
