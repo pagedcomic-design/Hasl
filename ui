@@ -203,7 +203,7 @@ function library.new(library, name, theme)
     ColorPickerPopup.Visible = false
     ColorPickerPopup.ZIndex = 999991
     Instance_new("UICorner", ColorPickerPopup).CornerRadius = UDim.new(0, 8)
-    Drag(ColorPickerPopup, ColorPickerPopup)
+    drag(ColorPickerPopup, ColorPickerPopup)
 
     local CP_Header = Instance_new("Frame", ColorPickerPopup)
     CP_Header.Size = UDim2_new(1, 0, 0, 28)
