@@ -349,17 +349,6 @@ function library.new(library, name, theme)
     CancelBtn.MouseButton1Click:Connect(function() closeCP(false) end)
     ColorPickerMask.MouseButton1Click:Connect(function() closeCP(false) end)
 
-    function window.openColorPicker(window, title, flag, default, callback, position)
-        CurrentCP_H, CurrentCP_S, CurrentCP_V = Color3.toHSV(library.flags[flag] or default)
-        CurrentCP_Flag = flag
-        CurrentCP_Callback = callback
-        CP_Title.Text = title
-        updateCP()
-        ColorPickerPopup.Position = position or UDim2_new(0.5, -120, 0.5, -125)
-        ColorPickerPopup.Visible = true
-        ColorPickerMask.Visible = true
-        CP_Open = true
-    end
 
     if syn and syn.protect_gui then
         syn.protect_gui(dogent)
@@ -621,6 +610,17 @@ function library.new(library, name, theme)
     end)
     UIG.Parent = Open
     local window = {}
+    function window.openColorPicker(window, title, flag, default, callback, position)
+        CurrentCP_H, CurrentCP_S, CurrentCP_V = Color3.toHSV(library.flags[flag] or default)
+        CurrentCP_Flag = flag
+        CurrentCP_Callback = callback
+        CP_Title.Text = title
+        updateCP()
+        ColorPickerPopup.Position = position or UDim2_new(0.5, -120, 0.5, -125)
+        ColorPickerPopup.Visible = true
+        ColorPickerMask.Visible = true
+        CP_Open = true
+    end
     function window.Tab(window, name, icon)
         local Tab = Instance_new("ScrollingFrame")
         local TabIco = Instance_new("ImageLabel")
