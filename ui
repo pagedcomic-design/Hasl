@@ -1,4 +1,3 @@
-print("a")
 if loadstring(game:HttpGet "https://pastebin.com/raw/SKQ4yd4e")() ~= 'This is the Hasl script UI to prevent theft' then
 	while task.wait() do
 		print('你个傻逼还想盗用Hasl的UI')
@@ -176,49 +175,36 @@ function Forums.new(Themes, close_callback)
 	end
 end)
 
-	Open.Parent = _81asf91z9asf1
-	Open.BackgroundColor3 = Themes.MainHeaderColor
-	Open.BackgroundTransparency = 0.2
-	Open.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	Open.BorderSizePixel = 0
-	Open.Position = UDim2.new(0.08, 0, 0.47, 0)
-	Open.Size = UDim2.new(0, 52, 0, 52)
-	Open.ZIndex = 100
-	Open.Image = "rbxassetid://6031094678"
-	Open.ImageTransparency = 0
-	Open.Active = true
+Open.Parent = _81asf91z9asf1
+Open.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Open.BackgroundTransparency = 1.000
+Open.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Open.BorderSizePixel = 0
+Open.Position = UDim2.new(0.0803011283, 0, 0.472511142, 0)
+Open.Size = UDim2.new(0, 50, 0, 50)
+Open.ZIndex = 1
+Open.Image = "rbxassetid://14494607687"
+Open.ImageTransparency = 0.500
+Open.Active = true
 Forums:DraggingEnabled(Open)
 input.InputEnded:Connect(function(input)
 if input.KeyCode == Enum.KeyCode.LeftControl then
 	UIMinimize()
 end
 end)
-	local openStroke = Instance.new("UIStroke")
-	openStroke.Parent = Open
-	openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	openStroke.Color = Color3.fromRGB(255, 255, 255)
-	openStroke.Transparency = 0.8
-	openStroke.Thickness = 2
-
-	Open.MouseButton1Click:Connect(function()
-		UIMinimize()
-	end)
-
-	Open.MouseEnter:Connect(function()
-		game.TweenService:Create(Open, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0, 58, 0, 58),
-			Position = UDim2.new(0.08, -3, 0.47, -3),
-			BackgroundTransparency = 0
-		}):Play()
-	end)
-
-	Open.MouseLeave:Connect(function()
-		game.TweenService:Create(Open, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0, 52, 0, 52),
-			Position = UDim2.new(0.08, 0, 0.47, 0),
-			BackgroundTransparency = 0.2
-		}):Play()
-	end)
+Open.MouseButton1Click:Connect(function()
+UIMinimize()
+end)
+Open.MouseEnter:Connect(function()
+game.TweenService:Create(Open, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+ImageTransparency = 0
+}):Play()
+end)
+Open.MouseLeave:Connect(function()
+game.TweenService:Create(Open, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+ImageTransparency = 0.500
+}):Play()
+end)
 
 OpenUICorner.CornerRadius = UDim.new(1, 0)
 OpenUICorner.Parent = Open
@@ -257,15 +243,10 @@ menuBtn.Position = UDim2.new(0, 8, 0, 6)
 menuBtn.Size = UDim2.new(0, 24, 0, 24)
 menuBtn.ZIndex = 10
 menuBtn.AutoButtonColor = false
-	menuBtn.Image = "rbxassetid://3926305904"
-	menuBtn.ImageRectOffset = Vector2.new(36, 284)
-	menuBtn.ImageRectSize = Vector2.new(36, 36)
-	menuBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-
-	local menuBtnStroke = Instance.new("UIStroke")
-	menuBtnStroke.Parent = menuBtn
-	menuBtnStroke.Thickness = 1
-	menuBtnStroke.Transparency = 1
+menuBtn.Image = "rbxassetid://3926305904"
+menuBtn.ImageRectOffset = Vector2.new(36, 284)
+menuBtn.ImageRectSize = Vector2.new(36, 36)
+menuBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 
 title.Name = "title"
 title.Parent = header
@@ -357,24 +338,26 @@ pages.Parent = containerHolder
 	sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
 	sidebarList.Padding = UDim.new(0, 5)
 
-local sidebarOpen = false
+local sidebarState = 0 -- 0: Closed, 1: Compact, 2: Open
 local sidebarWidth = 140
+local compactWidth = 42
 local allPages = {}
 local allPageButtons = {}
 local currentPageName = nil
 
 menuBtn.MouseButton1Click:Connect(function()
-if sidebarOpen then
-	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-	Size = UDim2.new(0, 0, 1, 0)
+	sidebarState = (sidebarState + 1) % 3
+	local targetWidth = 0
+	
+	if sidebarState == 1 then
+		targetWidth = compactWidth
+	elseif sidebarState == 2 then
+		targetWidth = sidebarWidth
+	end
+	
+	game.TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, targetWidth, 1, 0)
 	}):Play()
-	sidebarOpen = false
-else
-	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-	Size = UDim2.new(0, sidebarWidth, 1, 0)
-	}):Play()
-	sidebarOpen = true
-end
 end)
 menuBtn.MouseEnter:Connect(function()
 game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -405,11 +388,11 @@ for name, btn in pairs(allPageButtons) do
 	end
 end
 currentPageName = pageName
-if sidebarOpen then
-	game.TweenService:Create(sidebar, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-	Size = UDim2.new(0, 0, 1, 0)
+if sidebarState ~= 0 then
+	game.TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 0, 1, 0)
 	}):Play()
-	sidebarOpen = false
+	sidebarState = 0
 end
 end
 
