@@ -154,10 +154,10 @@ function library.new(library, name, theme)
             v:Destroy()
         end
     end
-    local MainColor = Color3_fromRGB(45, 45, 45)
-    local Background = Color3_fromRGB(45, 45, 45)
+    local MainColor = Color3_fromRGB(37, 37, 37)
+    local Background = Color3_fromRGB(42, 42, 42)
     local zyColor = Color3_fromRGB(255, 255, 255)
-    local beijingColor = Color3_fromRGB(55, 55, 55)
+    local beijingColor = Color3_fromRGB(57, 57, 57)
   
     local dogent = Instance_new("ScreenGui")
     dogent.IgnoreGuiInset = true
@@ -216,6 +216,7 @@ function library.new(library, name, theme)
     Main.Size = UDim2_new(0, 572, 0, 353)
     Main.ZIndex = 1
     Main.Active = true
+    Main.Draggable = true
     services.UserInputService.InputEnded:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftControl then
             if Main.Visible == true then
@@ -411,7 +412,7 @@ function library.new(library, name, theme)
     end)
     Open.Name = "Open"
     Open.Parent = dogent
-    Open.BackgroundColor3 = Color3_fromRGB(45, 45, 45)
+    Open.BackgroundColor3 = Color3_fromRGB(25, 25, 25)
     Open.Position = UDim2_new(0.00829315186, 0, 0.31107837, 0)
     Open.Size = UDim2_new(0, 61, 0, 32)
     Open.Font = Enum.Font.SourceSans
