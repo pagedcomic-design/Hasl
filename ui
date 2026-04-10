@@ -175,36 +175,49 @@ function Forums.new(Themes, close_callback)
 	end
 end)
 
-Open.Parent = _81asf91z9asf1
-Open.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Open.BackgroundTransparency = 1.000
-Open.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Open.BorderSizePixel = 0
-Open.Position = UDim2.new(0.0803011283, 0, 0.472511142, 0)
-Open.Size = UDim2.new(0, 50, 0, 50)
-Open.ZIndex = 1
-Open.Image = "rbxassetid://14494607687"
-Open.ImageTransparency = 0.500
-Open.Active = true
+	Open.Parent = _81asf91z9asf1
+	Open.BackgroundColor3 = Themes.MainHeaderColor
+	Open.BackgroundTransparency = 0.2
+	Open.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Open.BorderSizePixel = 0
+	Open.Position = UDim2.new(0.08, 0, 0.47, 0)
+	Open.Size = UDim2.new(0, 52, 0, 52)
+	Open.ZIndex = 100
+	Open.Image = "rbxassetid://6031094678"
+	Open.ImageTransparency = 0
+	Open.Active = true
 Forums:DraggingEnabled(Open)
 input.InputEnded:Connect(function(input)
 if input.KeyCode == Enum.KeyCode.LeftControl then
 	UIMinimize()
 end
 end)
-Open.MouseButton1Click:Connect(function()
-UIMinimize()
-end)
-Open.MouseEnter:Connect(function()
-game.TweenService:Create(Open, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-ImageTransparency = 0
-}):Play()
-end)
-Open.MouseLeave:Connect(function()
-game.TweenService:Create(Open, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-ImageTransparency = 0.500
-}):Play()
-end)
+	local openStroke = Instance.new("UIStroke")
+	openStroke.Parent = Open
+	openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	openStroke.Color = Color3.fromRGB(255, 255, 255)
+	openStroke.Transparency = 0.8
+	openStroke.Thickness = 2
+
+	Open.MouseButton1Click:Connect(function()
+		UIMinimize()
+	end)
+
+	Open.MouseEnter:Connect(function()
+		game.TweenService:Create(Open, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, 58, 0, 58),
+			Position = UDim2.new(0.08, -3, 0.47, -3),
+			BackgroundTransparency = 0
+		}):Play()
+	end)
+
+	Open.MouseLeave:Connect(function()
+		game.TweenService:Create(Open, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, 52, 0, 52),
+			Position = UDim2.new(0.08, 0, 0.47, 0),
+			BackgroundTransparency = 0.2
+		}):Play()
+	end)
 
 OpenUICorner.CornerRadius = UDim.new(1, 0)
 OpenUICorner.Parent = Open
@@ -235,25 +248,23 @@ header.BorderSizePixel = 0
 header.ClipsDescendants = true
 header.Size = UDim2.new(1.00000012, 0, -0.00295740133, 36)
 
-	local menuBtn = Instance.new("TextButton")
-	menuBtn.Name = "menuBtn"
-	menuBtn.Parent = header
-	menuBtn.BackgroundTransparency = 1.000
-	menuBtn.Position = UDim2.new(0, 10, 0, 8)
-	menuBtn.Size = UDim2.new(0, 20, 0, 20)
-	menuBtn.ZIndex = 11
-	menuBtn.Text = ""
+local menuBtn = Instance.new("ImageButton")
+menuBtn.Name = "menuBtn"
+menuBtn.Parent = header
+menuBtn.BackgroundTransparency = 1.000
+menuBtn.Position = UDim2.new(0, 8, 0, 6)
+menuBtn.Size = UDim2.new(0, 24, 0, 24)
+menuBtn.ZIndex = 10
+menuBtn.AutoButtonColor = false
+	menuBtn.Image = "rbxassetid://3926305904"
+	menuBtn.ImageRectOffset = Vector2.new(36, 284)
+	menuBtn.ImageRectSize = Vector2.new(36, 36)
+	menuBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 
-	for i = 1, 3 do
-		local line = Instance.new("Frame")
-		line.Name = "line_" .. i
-		line.Parent = menuBtn
-		line.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		line.BorderSizePixel = 0
-		line.Position = UDim2.new(0, 0, 0, (i - 1) * 7)
-		line.Size = UDim2.new(1, 0, 0, 2)
-		line.ZIndex = 12
-	end
+	local menuBtnStroke = Instance.new("UIStroke")
+	menuBtnStroke.Parent = menuBtn
+	menuBtnStroke.Thickness = 1
+	menuBtnStroke.Transparency = 1
 
 title.Name = "title"
 title.Parent = header
@@ -1352,15 +1363,14 @@ function fElements:NewDropdown(title, list, callback)
 	dropOpen.Name = "dropOpen"
 	dropOpen.Parent = dropFrame
 	dropOpen.BackgroundColor3 = Themes.DropOpenColor
-	dropOpen.BorderColor3 = Themes.SeperatorColor
-	dropOpen.BorderSizePixel = 1
+	dropOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
 	dropOpen.ClipsDescendants = true
-	dropOpen.Position = UDim2.new(0, 0, 0, 0)
-	dropOpen.Size = UDim2.new(1, 0, 0, 32)
+	dropOpen.Position = UDim2.new(0.00720164599, 0, 0.241830066, 0)
+	dropOpen.Size = UDim2.new(0, 474, 0, 32)
 	dropOpen.AutoButtonColor = false
-	dropOpen.Font = Enum.Font.Gotham
+	dropOpen.Font = Enum.Font.SourceSans
 	dropOpen.Text = ""
-	dropOpen.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dropOpen.TextColor3 = Color3.fromRGB(0, 0, 0)
 	dropOpen.TextSize = 14.000
 	dropOpen.MouseButton1Click:Connect(function()
 	if dOpened then
@@ -1437,12 +1447,11 @@ dropInf.BackgroundTransparency = 1.000
 dropInf.Position = UDim2.new(0.0177406278, 0, 0.199999809, 0)
 dropInf.Size = UDim2.new(0, 81, 0, 18)
 dropInf.ZIndex = 5
-	dropInf.Font = Enum.Font.Gotham
-	dropInf.Text = title .. " (Click to select)"
-	dropInf.TextColor3 = Color3.fromRGB(255, 255, 255)
-	dropInf.TextSize = 13.000
-	dropInf.TextXAlignment = Enum.TextXAlignment.Left
-	dropInf.TextTransparency = 0.3
+dropInf.Font = Enum.Font.Gotham
+dropInf.Text = title
+dropInf.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropInf.TextSize = 14.000
+dropInf.TextXAlignment = Enum.TextXAlignment.Left
 
 triangle.Name = "triangle"
 triangle.Parent = dropOpen
@@ -1527,7 +1536,6 @@ for i, v in next, list do
 	local sample = Sample_2
 	btn.MouseButton1Click:Connect(function()
 	dropInf.Text = title .. ": " .. v
-	dropInf.TextTransparency = 0
 	callback(v)
 	game.TweenService:Create(dropFrame,
 	TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -2918,15 +2926,13 @@ function fElements:NewDropdown(dTitle, list, callback)
 	dropOpen.Name = "dropOpen"
 	dropOpen.Parent = dropFrame
 	dropOpen.BackgroundColor3 = Themes.DropOpenColor
-	dropOpen.BorderColor3 = Themes.SeperatorColor
-	dropOpen.BorderSizePixel = 1
+	dropOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
 	dropOpen.ClipsDescendants = true
-	dropOpen.Position = UDim2.new(0, 0, 0, 0)
-	dropOpen.Size = UDim2.new(1, 0, 0, 32)
+	dropOpen.Size = UDim2.new(0, 474, 0, 32)
 	dropOpen.AutoButtonColor = false
-	dropOpen.Font = Enum.Font.Gotham
+	dropOpen.Font = Enum.Font.SourceSans
 	dropOpen.Text = ""
-	dropOpen.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dropOpen.TextColor3 = Color3.fromRGB(0, 0, 0)
 	dropOpen.TextSize = 14.000
 	dropOpen.MouseButton1Click:Connect(function()
 	if dOpened then
@@ -2969,19 +2975,18 @@ dropOpen.MouseLeave:Connect(function()
 game.TweenService:Create(dropOpen, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.Color }):Play()
 end)
 
-	dropInf.Name = "dropInf"
-	dropInf.Parent = dropOpen
-	dropInf.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	dropInf.BackgroundTransparency = 1.000
-	dropInf.Position = UDim2.new(0.0177, 0, 0.2, 0)
-	dropInf.Size = UDim2.new(0, 81, 0, 18)
-	dropInf.ZIndex = 5
-	dropInf.Font = Enum.Font.Gotham
-	dropInf.Text = dTitle .. " (Click to select)"
-	dropInf.TextColor3 = Color3.fromRGB(255, 255, 255)
-	dropInf.TextSize = 13.000
-	dropInf.TextXAlignment = Enum.TextXAlignment.Left
-	dropInf.TextTransparency = 0.3
+dropInf.Name = "dropInf"
+dropInf.Parent = dropOpen
+dropInf.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dropInf.BackgroundTransparency = 1.000
+dropInf.Position = UDim2.new(0.0177406278, 0, 0.199999809, 0)
+dropInf.Size = UDim2.new(0, 81, 0, 18)
+dropInf.ZIndex = 5
+dropInf.Font = Enum.Font.Gotham
+dropInf.Text = dTitle
+dropInf.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropInf.TextSize = 14.000
+dropInf.TextXAlignment = Enum.TextXAlignment.Left
 
 tri.Name = "triangle"
 tri.Parent = dropOpen
@@ -3062,9 +3067,8 @@ Sample_2.ImageColor3 = Themes.SampleColor
 Sample_2.ImageTransparency = 0.600
 
 dropOption.MouseButton1Click:Connect(function()
-		dropInf.Text = dTitle .. ": " .. v
-		dropInf.TextTransparency = 0
-		callback(v)
+dropInf.Text = dTitle .. ": " .. v
+callback(v)
 game.TweenService:Create(dropFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, 474, 0, 32) }):Play()
 game.TweenService:Create(expand_more, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Rotation = 0 }):Play()
 task.wait(0.1)
