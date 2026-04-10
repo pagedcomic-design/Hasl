@@ -17,7 +17,7 @@ host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 999,
+firstConnectDepth = 5,
 updateTreeDepth   = 3,
 expandedTreeDepth = 2,
 gameTreeServices  = {
@@ -257,7 +257,12 @@ end
 --  Networking
 
 local jsonEncode = function(data)
-return HttpService:JSONEncode(data)
+local ok, result = pcall(HttpService.JSONEncode, HttpService, data)
+if not ok then
+	warn('[rbxdev-bridge] JSONEncode failed: ' .. tostring(result))
+	return nil
+end
+return result
 end
 
 local jsonDecode = function(data)
@@ -312,7 +317,9 @@ end
 
 local send = function(data)
 if connection == nil or not connected then return end
-connection:Send(jsonEncode(data))
+local encoded = jsonEncode(data)
+if encoded == nil then return end
+connection:Send(encoded)
 end
 
 local sendResult = function(messageType, id, success, payload)
