@@ -274,17 +274,22 @@ function library.new(library, name, theme)
     SVBtn.Parent = SVMap
 
     local SVPointer = Instance_new("Frame")
+    local SVPointerC = Instance_new("UICorner")
+    local SVPointerStroke = Instance_new("UIStroke")
+
+    SVPointer.Name = "SVPointer"
     SVPointer.Size = UDim2_new(0, 10, 0, 10)
     SVPointer.AnchorPoint = Vector2.new(0.5, 0.5)
-    SVPointer.BackgroundTransparency = 1
-    SVPointer.ZIndex = 999996
-    local SVPointerImg = Instance_new("ImageLabel")
-    SVPointerImg.Size = UDim2_new(1, 0, 1, 0)
-    SVPointerImg.BackgroundTransparency = 1
-    SVPointerImg.Image = "rbxassetid://4975593836"
-    SVPointerImg.ZIndex = 999997
-    SVPointerImg.Parent = SVPointer
+    SVPointer.BackgroundColor3 = Color3_new(1, 1, 1)
+    SVPointer.ZIndex = 999999
     SVPointer.Parent = SVMap
+
+    SVPointerC.CornerRadius = UDim.new(1, 0)
+    SVPointerC.Parent = SVPointer
+
+    SVPointerStroke.Thickness = 1.5
+    SVPointerStroke.Color = Color3_new(0, 0, 0)
+    SVPointerStroke.Parent = SVPointer
 
 
     local HueSlider = Instance_new("Frame")
@@ -364,8 +369,8 @@ function library.new(library, name, theme)
     local function updateCP()
         local color = Color3_fromHSV(CurrentCP_H, CurrentCP_S, CurrentCP_V)
         SVMap.BackgroundColor3 = Color3_fromHSV(CurrentCP_H, 1, 1)
-        SVPointer.Position = UDim2_new(CurrentCP_S, 0, 1 - CurrentCP_V, 0)
-        HuePointer.Position = UDim2_new(CurrentCP_H, 0, 0.5, 0)
+        SVPointer.Position = UDim2_new(math.clamp(CurrentCP_S, 0, 1), 0, math.clamp(1 - CurrentCP_V, 0, 1), 0)
+        HuePointer.Position = UDim2_new(math.clamp(CurrentCP_H, 0, 1), 0, 0.5, 0)
         if CurrentCP_Callback then
             CurrentCP_Callback(color)
         end
@@ -400,12 +405,11 @@ function library.new(library, name, theme)
     services.UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local mPos = services.UserInputService:GetMouseLocation()
-            local inset = services.GuiService:GetGuiInset()
             if draggingSV then
                 local r = SVMap.AbsoluteSize
                 local p = SVMap.AbsolutePosition
                 CurrentCP_S = math.clamp((mPos.X - p.X) / r.X, 0, 1)
-                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y - inset.Y) / r.Y), 0, 1)
+                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y) / r.Y), 0, 1)
                 updateCP()
             elseif draggingHue then
                 local r = HueSlider.AbsoluteSize
