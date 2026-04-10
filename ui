@@ -1,3 +1,4 @@
+print("a")
 if loadstring(game:HttpGet "https://pastebin.com/raw/SKQ4yd4e")() ~= 'This is the Hasl script UI to prevent theft' then
 	while task.wait() do
 		print('你个傻逼还想盗用Hasl的UI')
