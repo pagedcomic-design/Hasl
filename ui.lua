@@ -362,9 +362,13 @@ function library.new(library, name, theme)
 
 
     local function updateCP()
+        local color = Color3_fromHSV(CurrentCP_H, CurrentCP_S, CurrentCP_V)
         SVMap.BackgroundColor3 = Color3_fromHSV(CurrentCP_H, 1, 1)
         SVPointer.Position = UDim2_new(CurrentCP_S, 0, 1 - CurrentCP_V, 0)
         HuePointer.Position = UDim2_new(CurrentCP_H, 0, 0.5, 0)
+        if CurrentCP_Callback then
+            CurrentCP_Callback(color)
+        end
     end
 
 
@@ -396,11 +400,12 @@ function library.new(library, name, theme)
     services.UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local mPos = services.UserInputService:GetMouseLocation()
+            local inset = services.GuiService:GetGuiInset()
             if draggingSV then
                 local r = SVMap.AbsoluteSize
                 local p = SVMap.AbsolutePosition
                 CurrentCP_S = math.clamp((mPos.X - p.X) / r.X, 0, 1)
-                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y - 36) / r.Y), 0, 1) -- -36 to account for Topbar Inset in absolute pos
+                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y - inset.Y) / r.Y), 0, 1)
                 updateCP()
             elseif draggingHue then
                 local r = HueSlider.AbsoluteSize
@@ -412,13 +417,16 @@ function library.new(library, name, theme)
     end)
 
     local function closeCP(apply)
-        if IsDraggingPicker then return end -- Prevent closing while dragging
+        if IsDraggingPicker then return end
         ColorPickerPopup.Visible = false
         ColorPickerMask.Visible = false
         if apply and CurrentCP_Callback then
             local color = Color3_fromHSV(CurrentCP_H, CurrentCP_S, CurrentCP_V)
             library.flags[CurrentCP_Flag] = color
             CurrentCP_Callback(color)
+        elseif not apply and CurrentCP_Callback then
+            library.flags[CurrentCP_Flag] = OriginalCP_Color
+            CurrentCP_Callback(OriginalCP_Color)
         end
         CP_Open = false
     end
@@ -674,7 +682,8 @@ function library.new(library, name, theme)
     UIG.Parent = Open
     local window = {}
     function window.openColorPicker(window, title, flag, default, callback, position)
-        CurrentCP_H, CurrentCP_S, CurrentCP_V = Color3.toHSV(library.flags[flag] or default)
+        OriginalCP_Color = library.flags[flag] or default
+        CurrentCP_H, CurrentCP_S, CurrentCP_V = Color3.toHSV(OriginalCP_Color)
         CurrentCP_Flag = flag
         CurrentCP_Callback = callback
         CP_Title.Text = title
