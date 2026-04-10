@@ -12,16 +12,7 @@ local services = setmetatable({}, {
         return game.GetService(game, k)
     end
 })
-if not game.ReplicatedStorage:FindFirstChild('uisgduhihwg') then
-    pcall(function()
-        game.ReplicatedStorage:FindFirstChild('uisgduhihwg'):Destroy()
-    end)
-    game:Shutdown()
-    return game.Players.LocalPlayer:Kick(game.Players.LocalPlayer.Name .. '你没有加入白名单')
-end
-pcall(function()
-    game.ReplicatedStorage:FindFirstChild('uisgduhihwg'):Destroy()
-end)
+
 local mouse = services.Players.LocalPlayer:GetMouse()
 
 function Tween(obj, t, data)
