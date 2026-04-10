@@ -205,11 +205,13 @@ function library.new(library, name, theme)
 
     ColorPickerPopup.Name = "ColorPickerPopup"
     ColorPickerPopup.BackgroundColor3 = Background
+    ColorPickerPopup.BorderColor3 = MainColor
+    ColorPickerPopup.BorderSizePixel = 1
     ColorPickerPopup.Size = UDim2_new(0, 240, 0, 250)
     ColorPickerPopup.Visible = false
     ColorPickerPopup.ZIndex = 999991
     local CPC = Instance_new("UICorner")
-    CPC.CornerRadius = UDim.new(0, 8)
+    CPC.CornerRadius = UDim.new(0, 6)
     CPC.Parent = ColorPickerPopup
     ColorPickerPopup.Parent = dogent
     drag(ColorPickerPopup, ColorPickerPopup)
