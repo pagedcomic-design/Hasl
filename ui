@@ -102,7 +102,7 @@ function UIMinimize()
 	if minimized then
 		game.TweenService:Create(gethui()[getgenv().libName].shadow.Main,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-		Size = UDim2.new(0, 486, 0, 283)
+		Size = UDim2.new(0, 600, 0, 400)
 		}):Play()
 		task.wait()
 		game.TweenService:Create(gethui()[getgenv().libName].shadow,
@@ -214,7 +214,7 @@ shadow.Parent = _81asf91z9asf1
 shadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 shadow.BackgroundTransparency = 1.000
 shadow.Position = UDim2.new(0.377575755, 0, 0.382281542, 0)
-shadow.Size = UDim2.new(0, 539, 0, 317)
+shadow.Size = UDim2.new(0, 650, 0, 450)
 shadow.ZIndex = 0
 shadow.ImageTransparency = 1
 shadow.Image = "rbxassetid://4996891970"
@@ -235,31 +235,14 @@ header.BorderSizePixel = 0
 header.ClipsDescendants = true
 header.Size = UDim2.new(1.00000012, 0, -0.00295740133, 36)
 
-local menuBtn = Instance.new("ImageButton")
-menuBtn.Name = "menuBtn"
-menuBtn.Parent = header
-menuBtn.BackgroundTransparency = 1.000
-menuBtn.Position = UDim2.new(0, 8, 0, 6)
-menuBtn.Size = UDim2.new(0, 24, 0, 24)
-menuBtn.ZIndex = 10
-menuBtn.AutoButtonColor = false
-menuBtn.Image = "rbxassetid://3926305904"
-menuBtn.ImageRectOffset = Vector2.new(36, 284)
-menuBtn.ImageRectSize = Vector2.new(36, 36)
-menuBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-
-title.Name = "title"
-title.Parent = header
-title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-title.BackgroundTransparency = 1.000
-title.Position = UDim2.new(0, 38, 0, 6)
-title.Size = UDim2.new(0, 202, 0, 23)
-title.ZIndex = 5
-title.Font = Enum.Font.Gotham
-title.Text = 'Hasl'
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 14.000
-title.TextXAlignment = Enum.TextXAlignment.Left
+title.Position = UDim2.new(0, 12, 0, 6)
+ title.Size = UDim2.new(0, 202, 0, 23)
+ title.ZIndex = 5
+ title.Font = Enum.Font.Gotham
+ title.Text = 'Hasl'
+ title.TextColor3 = Color3.fromRGB(255, 255, 255)
+ title.TextSize = 14.000
+ title.TextXAlignment = Enum.TextXAlignment.Left
 
 triangle1.Name = "triangle1"
 triangle1.Parent = header
@@ -310,21 +293,23 @@ containerHolder.Name = "containerHolder"
 containerHolder.Parent = Main
 containerHolder.BackgroundColor3 = Themes.TainerHdlderColor
 containerHolder.BorderSizePixel = 0
-containerHolder.Position = UDim2.new(0, 0, 0.124251083, 0)
-containerHolder.Size = UDim2.new(0, 485, 0, 247)
-
-pages.Name = "pages"
-pages.Parent = containerHolder
+containerHolder.Position = UDim2.new(0, 0, 0, 36)
+ containerHolder.Size = UDim2.new(1, 0, 1, -36)
 
 	local sidebar = Instance.new("Frame")
+	pages.Name = "pages"
+	pages.Parent = containerHolder
+	pages.Position = UDim2.new(0, 160, 0, 0)
+	pages.Size = UDim2.new(1, -160, 1, 0)
+
 	sidebar.Name = "sidebar"
-	sidebar.Parent = containerHolder
-	sidebar.BackgroundColor3 = Themes.MainHeaderColor
-	sidebar.BorderSizePixel = 0
-	sidebar.ClipsDescendants = true
-	sidebar.Position = UDim2.new(0, 0, 0, 0)
-	sidebar.Size = UDim2.new(0, 0, 1, 0)
-	sidebar.ZIndex = 20
+ sidebar.Parent = containerHolder
+ sidebar.BackgroundColor3 = Themes.MainHeaderColor
+ sidebar.BorderSizePixel = 0
+ sidebar.ClipsDescendants = true
+ sidebar.Position = UDim2.new(0, 0, 0, 0)
+ sidebar.Size = UDim2.new(0, 160, 1, 0)
+ sidebar.ZIndex = 20
 
 	local sidebarPadding = Instance.new("UIPadding")
 	sidebarPadding.Parent = sidebar
@@ -338,37 +323,10 @@ pages.Parent = containerHolder
 	sidebarList.SortOrder = Enum.SortOrder.LayoutOrder
 	sidebarList.Padding = UDim.new(0, 5)
 
-local sidebarState = 0 -- 0: Closed, 1: Compact, 2: Open
-local sidebarWidth = 140
-local compactWidth = 42
 local allPages = {}
 local allPageButtons = {}
 local currentPageName = nil
-
-menuBtn.MouseButton1Click:Connect(function()
-	sidebarState = (sidebarState + 1) % 3
-	local targetWidth = 0
-	
-	if sidebarState == 1 then
-		targetWidth = compactWidth
-	elseif sidebarState == 2 then
-		targetWidth = sidebarWidth
-	end
-	
-	game.TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, targetWidth, 1, 0)
-	}):Play()
-end)
-menuBtn.MouseEnter:Connect(function()
-game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-ImageColor3 = Color3.fromRGB(200, 200, 200)
-}):Play()
-end)
-menuBtn.MouseLeave:Connect(function()
-game.TweenService:Create(menuBtn, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-ImageColor3 = Color3.fromRGB(255, 255, 255)
-}):Play()
-end)
+local sidebarWidth = 160
 
 local function switchPage(pageName)
 for name, pg in pairs(allPages) do
@@ -388,23 +346,17 @@ for name, btn in pairs(allPageButtons) do
 	end
 end
 currentPageName = pageName
-if sidebarState ~= 0 then
-	game.TweenService:Create(sidebar, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, 0, 1, 0)
+end
+
+	UIListLayout_2.Parent = shadow
+	UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Center
+
+	game.TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+		Size = UDim2.new(0, 600, 0, 400)
 	}):Play()
-	sidebarState = 0
-end
-end
-
-UIListLayout_2.Parent = shadow
-UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
-UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_2.VerticalAlignment = Enum.VerticalAlignment.Center
-
-game.TweenService:Create(Main, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-Size = UDim2.new(0, 486, 0, 283)
-}):Play()
-task.wait()
+	task.wait()
 game.TweenService:Create(shadow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 ImageTransparency = 0
 }):Play()
