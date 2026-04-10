@@ -492,30 +492,10 @@ function library.new(library, name, theme)
     DropShadow.Size = UDim2_new(1, 43, 1, 43)
     DropShadow.ZIndex = 0
     DropShadow.Image = "rbxassetid://6015897843"
-    DropShadow.ImageColor3 = Color3_fromRGB(255, 255, 255)
+    DropShadow.ImageColor3 = Color3_fromRGB(0, 0, 0)
     DropShadow.ImageTransparency = 0.500
     DropShadow.ScaleType = Enum.ScaleType.Slice
     DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-
-    UIGradient.Color = ColorSequence.new {ColorSequenceKeypoint.new(0.00, Color3_fromRGB(255, 0, 0)),
-                                          ColorSequenceKeypoint.new(0.10, Color3_fromRGB(255, 127, 0)),
-                                          ColorSequenceKeypoint.new(0.20, Color3_fromRGB(255, 255, 0)),
-                                          ColorSequenceKeypoint.new(0.30, Color3_fromRGB(0, 255, 0)),
-                                          ColorSequenceKeypoint.new(0.40, Color3_fromRGB(0, 255, 255)),
-                                          ColorSequenceKeypoint.new(0.50, Color3_fromRGB(0, 0, 255)),
-                                          ColorSequenceKeypoint.new(0.60, Color3_fromRGB(139, 0, 255)),
-                                          ColorSequenceKeypoint.new(0.70, Color3_fromRGB(255, 0, 0)),
-                                          ColorSequenceKeypoint.new(0.80, Color3_fromRGB(255, 127, 0)),
-                                          ColorSequenceKeypoint.new(0.90, Color3_fromRGB(255, 255, 0)),
-                                          ColorSequenceKeypoint.new(1.00, Color3_fromRGB(0, 255, 0))}
-    UIGradient.Parent = DropShadow
-
-    local TweenService = game:GetService("TweenService")
-    local tweeninfo = TweenInfo.new(7, Enum.EasingStyle.Linear, Enum.EasingDirection.In, -1)
-    local tween = TweenService:Create(UIGradient, tweeninfo, {
-        Rotation = 360
-    })
-    tween:Play()
 
     function toggleui()
         toggled = not toggled
