@@ -371,9 +371,11 @@ function library.new(library, name, theme)
         SVMap.BackgroundColor3 = Color3_fromHSV(CurrentCP_H, 1, 1)
         SVPointer.Position = UDim2_new(math.clamp(CurrentCP_S, 0, 1), 0, math.clamp(1 - CurrentCP_V, 0, 1), 0)
         HuePointer.Position = UDim2_new(math.clamp(CurrentCP_H, 0, 1), 0, 0.5, 0)
-        if CurrentCP_Callback then
-            CurrentCP_Callback(color)
-        end
+        task.spawn(function()
+            if CurrentCP_Callback then
+                CurrentCP_Callback(color)
+            end
+        end)
     end
 
 
@@ -404,16 +406,18 @@ function library.new(library, name, theme)
 
     services.UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local mPos = input.Position
+            local inset = services.GuiService:GetGuiInset()
             if draggingSV then
                 local r = SVMap.AbsoluteSize
                 local p = SVMap.AbsolutePosition
-                CurrentCP_S = math.clamp((input.Position.X - p.X) / r.X, 0, 1)
-                CurrentCP_V = math.clamp(1 - ((input.Position.Y - p.Y) / r.Y), 0, 1)
+                CurrentCP_S = math.clamp((mPos.X - p.X) / r.X, 0, 1)
+                CurrentCP_V = math.clamp(1 - ((mPos.Y - p.Y - inset.Y) / r.Y), 0, 1)
                 updateCP()
             elseif draggingHue then
                 local r = HueSlider.AbsoluteSize
                 local p = HueSlider.AbsolutePosition
-                CurrentCP_H = math.clamp((input.Position.X - p.X) / r.X, 0, 1)
+                CurrentCP_H = math.clamp((mPos.X - p.X) / r.X, 0, 1)
                 updateCP()
             end
         end
