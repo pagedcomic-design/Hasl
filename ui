@@ -179,6 +179,188 @@ function library.new(library, name, theme)
     local UIGradient = Instance_new("UIGradient")
     local UIGradientTitle = Instance_new("UIGradient")
 
+    -- Floating Color Picker Shared Logic
+    local ColorPickerPopup = Instance_new("Frame")
+    local ColorPickerMask = Instance_new("TextButton")
+    local CurrentCP_H, CurrentCP_S, CurrentCP_V = 0, 0, 0
+    local CurrentCP_Flag = nil
+    local CurrentCP_Callback = nil
+    local OriginalCP_Color = nil
+    local CP_Open = false
+
+    ColorPickerMask.Name = "ColorPickerMask"
+    ColorPickerMask.Parent = dogent
+    ColorPickerMask.Size = UDim2_new(10, 0, 10, 0)
+    ColorPickerMask.Position = UDim2_new(-5, 0, -5, 0)
+    ColorPickerMask.BackgroundTransparency = 1
+    ColorPickerMask.Visible = false
+    ColorPickerMask.ZIndex = 999990
+
+    ColorPickerPopup.Name = "ColorPickerPopup"
+    ColorPickerPopup.Parent = dogent
+    ColorPickerPopup.BackgroundColor3 = Background
+    ColorPickerPopup.Size = UDim2_new(0, 240, 0, 250)
+    ColorPickerPopup.Visible = false
+    ColorPickerPopup.ZIndex = 999991
+    Instance_new("UICorner", ColorPickerPopup).CornerRadius = UDim.new(0, 8)
+    Drag(ColorPickerPopup, ColorPickerPopup)
+
+    local CP_Header = Instance_new("Frame", ColorPickerPopup)
+    CP_Header.Size = UDim2_new(1, 0, 0, 28)
+    CP_Header.BackgroundTransparency = 1
+    local CP_Title = Instance_new("TextLabel", CP_Header)
+    CP_Title.Size = UDim2_new(1, 0, 1, 0)
+    CP_Title.BackgroundTransparency = 1
+    CP_Title.Font = Enum.Font.GothamSemibold
+    CP_Title.Text = "色彩选择 / Color Picker"
+    CP_Title.TextColor3 = zyColor
+    CP_Title.TextSize = 14
+
+    local SVMap = Instance_new("Frame", ColorPickerPopup)
+    SVMap.Position = UDim2_new(0, 10, 0, 35)
+    SVMap.Size = UDim2_new(0, 220, 0, 130)
+    Instance_new("UICorner", SVMap).CornerRadius = UDim.new(0, 6)
+    
+    local SatGFrame = Instance_new("Frame", SVMap)
+    SatGFrame.Size = UDim2_new(1, 0, 1, 0)
+    SatGFrame.BackgroundColor3 = zyColor
+    local SatG = Instance_new("UIGradient", SatGFrame)
+    SatG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+    Instance_new("UICorner", SatGFrame).CornerRadius = UDim.new(0, 6)
+
+    local ValGFrame = Instance_new("Frame", SVMap)
+    ValGFrame.Size = UDim2_new(1, 0, 1, 0)
+    ValGFrame.BackgroundColor3 = Color3_new(0,0,0)
+    local ValG = Instance_new("UIGradient", ValGFrame)
+    ValG.Rotation = 90
+    ValG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+    Instance_new("UICorner", ValGFrame).CornerRadius = UDim.new(0, 6)
+    
+    local SVPointer = Instance_new("Frame", SVMap)
+    SVPointer.Size = UDim2_new(0, 10, 0, 10)
+    SVPointer.AnchorPoint = Vector2.new(0.5, 0.5)
+    SVPointer.BackgroundTransparency = 1
+    SVPointer.ZIndex = 10
+    local SVPointerImg = Instance_new("ImageLabel", SVPointer)
+    SVPointerImg.Size = UDim2_new(1, 0, 1, 0)
+    SVPointerImg.BackgroundTransparency = 1
+    SVPointerImg.Image = "rbxassetid://4975593836"
+
+    local HueSlider = Instance_new("Frame", ColorPickerPopup)
+    HueSlider.Position = UDim2_new(0, 10, 0, 175)
+    HueSlider.Size = UDim2_new(0, 220, 0, 20)
+    Instance_new("UICorner", HueSlider).CornerRadius = UDim.new(0, 4)
+    local HueG = Instance_new("UIGradient", HueSlider)
+    HueG.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.00, Color3_fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.16, Color3_fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3_fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.50, Color3_fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.66, Color3_fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3_fromRGB(255, 0, 255)),
+        ColorSequenceKeypoint.new(1.00, Color3_fromRGB(255, 0, 0))
+    })
+
+    local HuePointer = Instance_new("Frame", HueSlider)
+    HuePointer.Size = UDim2_new(0, 4, 1, 4)
+    HuePointer.Position = UDim2_new(0, 0, 0.5, 0)
+    HuePointer.AnchorPoint = Vector2.new(0.5, 0.5)
+    HuePointer.BackgroundColor3 = zyColor
+    HuePointer.ZIndex = 11
+    Instance_new("UICorner", HuePointer).CornerRadius = UDim.new(0, 2)
+
+    local CP_Btns = Instance_new("Frame", ColorPickerPopup)
+    CP_Btns.Position = UDim2_new(0, 10, 0, 205)
+    CP_Btns.Size = UDim2_new(0, 220, 0, 35)
+    CP_Btns.BackgroundTransparency = 1
+
+    local ConfirmBtn = Instance_new("TextButton", CP_Btns)
+    ConfirmBtn.Size = UDim2_new(0.5, -5, 1, 0)
+    ConfirmBtn.BackgroundColor3 = beijingColor
+    ConfirmBtn.Font = Enum.Font.GothamSemibold
+    ConfirmBtn.Text = "确定 / OK"
+    ConfirmBtn.TextColor3 = zyColor
+    ConfirmBtn.TextSize = 12
+    Instance_new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 6)
+
+    local CancelBtn = Instance_new("TextButton", CP_Btns)
+    CancelBtn.Position = UDim2_new(0.5, 5, 0, 0)
+    CancelBtn.Size = UDim2_new(0.5, -5, 1, 0)
+    CancelBtn.BackgroundColor3 = Color3_fromRGB(45, 45, 45)
+    CancelBtn.Font = Enum.Font.GothamSemibold
+    CancelBtn.Text = "取消 / Cancel"
+    CancelBtn.TextColor3 = Color3_fromRGB(255, 100, 100)
+    CancelBtn.TextSize = 12
+    Instance_new("UICorner", CancelBtn).CornerRadius = UDim.new(0, 6)
+
+    local function updateCP()
+        SVMap.BackgroundColor3 = Color3_fromHSV(CurrentCP_H, 1, 1)
+        SVPointer.Position = UDim2_new(CurrentCP_S, 0, 1 - CurrentCP_V, 0)
+        HuePointer.Position = UDim2_new(CurrentCP_H, 0, 0.5, 0)
+    end
+
+    local draggingSV = false
+    SVMap.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSV = true
+        end
+    end)
+    local draggingHue = false
+    HueSlider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingHue = true
+        end
+    end)
+    services.UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSV = false
+            draggingHue = false
+        end
+    end)
+    services.UserInputService.InputChanged:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            if draggingSV then
+                local r = SVMap.AbsoluteSize
+                local p = SVMap.AbsolutePosition
+                CurrentCP_S = math.clamp((mouse.X - p.X) / r.X, 0, 1)
+                CurrentCP_V = math.clamp(1 - ((mouse.Y - p.Y) / r.Y), 0, 1)
+                updateCP()
+            elseif draggingHue then
+                local r = HueSlider.AbsoluteSize
+                local p = HueSlider.AbsolutePosition
+                CurrentCP_H = math.clamp((mouse.X - p.X) / r.X, 0, 1)
+                updateCP()
+            end
+        end
+    end)
+
+    local function closeCP(apply)
+        ColorPickerPopup.Visible = false
+        ColorPickerMask.Visible = false
+        if apply and CurrentCP_Callback then
+            local color = Color3_fromHSV(CurrentCP_H, CurrentCP_S, CurrentCP_V)
+            library.flags[CurrentCP_Flag] = color
+            CurrentCP_Callback(color)
+        end
+        CP_Open = false
+    end
+
+    ConfirmBtn.MouseButton1Click:Connect(function() closeCP(true) end)
+    CancelBtn.MouseButton1Click:Connect(function() closeCP(false) end)
+    ColorPickerMask.MouseButton1Click:Connect(function() closeCP(false) end)
+
+    function window.openColorPicker(window, title, flag, default, callback, position)
+        CurrentCP_H, CurrentCP_S, CurrentCP_V = Color3.toHSV(library.flags[flag] or default)
+        CurrentCP_Flag = flag
+        CurrentCP_Callback = callback
+        CP_Title.Text = title
+        updateCP()
+        ColorPickerPopup.Position = position or UDim2_new(0.5, -120, 0.5, -125)
+        ColorPickerPopup.Visible = true
+        ColorPickerMask.Visible = true
+        CP_Open = true
+    end
+
     if syn and syn.protect_gui then
         syn.protect_gui(dogent)
     end
@@ -1222,23 +1404,11 @@ function library.new(library, name, theme)
                 local ColorTopC = Instance_new("UICorner")
                 local ColorView = Instance_new("Frame")
                 local ColorViewC = Instance_new("UICorner")
-                local ColorContent = Instance_new("Frame")
-                local ColorContentC = Instance_new("UICorner")
-                local ColorContentL = Instance_new("UIListLayout")
-                local SVBox = Instance_new("Frame")
-                local SVBoxC = Instance_new("UICorner")
-                local SVCursor = Instance_new("Frame")
-                local SVCursorC = Instance_new("UICorner")
-                local HueSlider = Instance_new("Frame")
-                local HueSliderC = Instance_new("UICorner")
-                local HueCursor = Instance_new("Frame")
-                local HueCursorC = Instance_new("UICorner")
 
                 ColorModule.Name = "ColorModule"
                 ColorModule.Parent = Objs
                 ColorModule.BackgroundColor3 = Color3_fromRGB(255, 255, 255)
                 ColorModule.BackgroundTransparency = 1.000
-                ColorModule.ClipsDescendants = true
                 ColorModule.Size = UDim2_new(0, 428, 0, 38)
 
                 ColorTop.Name = "ColorTop"
@@ -1264,168 +1434,13 @@ function library.new(library, name, theme)
                 ColorViewC.CornerRadius = UDim.new(0, 4)
                 ColorViewC.Parent = ColorView
 
-                ColorContent.Name = "ColorContent"
-                ColorContent.Parent = ColorModule
-                ColorContent.BackgroundColor3 = Color3_fromRGB(30, 30, 30)
-                ColorContent.Position = UDim2_new(0, 4, 0, 42)
-                ColorContent.Size = UDim2_new(1, -8, 0, 160)
-
-                ColorContentC.CornerRadius = UDim.new(0, 6)
-                ColorContentC.Parent = ColorContent
-
-                ColorContentL.Parent = ColorContent
-                ColorContentL.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                ColorContentL.Padding = UDim.new(0, 15)
-                ColorContentL.FillDirection = Enum.FillDirection.Horizontal
-                ColorContentL.VerticalAlignment = Enum.VerticalAlignment.Center
-
-                SVBox.Name = "SVBox"
-                SVBox.Parent = ColorContent
-                SVBox.Size = UDim2_new(0, 140, 0, 140)
-                SVBox.BackgroundColor3 = Color3_fromHSV(1, 1, 1)
-
-                SVBoxC.CornerRadius = UDim.new(0, 4)
-                SVBoxC.Parent = SVBox
-
-                local SatGradient = Instance_new("Frame")
-                SatGradient.Size = UDim2_new(1, 0, 1, 0)
-                SatGradient.BackgroundTransparency = 0
-                SatGradient.BackgroundColor3 = Color3_fromRGB(255, 255, 255)
-                SatGradient.Parent = SVBox
-                local SatG = Instance_new("UIGradient")
-                SatG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-                SatG.Parent = SatGradient
-
-                local ValGradient = Instance_new("Frame")
-                ValGradient.Size = UDim2_new(1, 0, 1, 0)
-                ValGradient.BackgroundTransparency = 0
-                ValGradient.BackgroundColor3 = Color3_fromRGB(0, 0, 0)
-                ValGradient.Parent = SVBox
-                local ValG = Instance_new("UIGradient")
-                ValG.Rotation = 90
-                ValG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-                ValG.Parent = ValGradient
-
-                SVCursor.Name = "SVCursor"
-                SVCursor.Parent = SVBox
-                SVCursor.BackgroundColor3 = Color3_new(1, 1, 1)
-                SVCursor.BackgroundTransparency = 1
-                SVCursor.Size = UDim2_new(0, 8, 0, 8)
-                SVCursor.ZIndex = 5
-                SVCursor.BorderSizePixel = 1
-                
-                local SVRing = Instance_new("ImageLabel")
-                SVRing.Image = "rbxassetid://4975593836" -- Circle ring
-                SVRing.Size = UDim2_new(1, 0, 1, 0)
-                SVRing.BackgroundTransparency = 1
-                SVRing.Parent = SVCursor
-
-                HueSlider.Name = "HueSlider"
-                HueSlider.Parent = ColorContent
-                HueSlider.Size = UDim2_new(0, 20, 0, 140)
-                HueSlider.BackgroundColor3 = Color3_fromRGB(255, 255, 255)
-
-                HueSliderC.CornerRadius = UDim.new(0, 4)
-                HueSliderC.Parent = HueSlider
-
-                local HueG = Instance_new("UIGradient")
-                HueG.Rotation = 90
-                HueG.Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0.00, Color3_fromRGB(255, 0, 0)),
-                    ColorSequenceKeypoint.new(0.16, Color3_fromRGB(255, 255, 0)),
-                    ColorSequenceKeypoint.new(0.33, Color3_fromRGB(0, 255, 0)),
-                    ColorSequenceKeypoint.new(0.50, Color3_fromRGB(0, 255, 255)),
-                    ColorSequenceKeypoint.new(0.66, Color3_fromRGB(0, 0, 255)),
-                    ColorSequenceKeypoint.new(0.83, Color3_fromRGB(255, 0, 255)),
-                    ColorSequenceKeypoint.new(1.00, Color3_fromRGB(255, 0, 0))
-                })
-                HueG.Parent = HueSlider
-
-                HueCursor.Name = "HueCursor"
-                HueCursor.Parent = HueSlider
-                HueCursor.BackgroundColor3 = Color3_new(1, 1, 1)
-                HueCursor.Size = UDim2_new(1, 0, 0, 2)
-                HueCursor.ZIndex = 5
-
-                local h, s, v = Color3.toHSV(default)
-                local open = false
-
-                local function update()
-                    local pickedColor = Color3_fromHSV(h, s, v)
-                    ColorView.BackgroundColor3 = pickedColor
-                    SVBox.BackgroundColor3 = Color3_fromHSV(h, 1, 1)
-                    SVCursor.Position = UDim2_new(s, -4, 1 - v, -4)
-                    HueCursor.Position = UDim2_new(0, 0, 1 - h, -1)
-                    library.flags[flag] = pickedColor
-                    callback(pickedColor)
-                end
-
                 ColorTop.MouseButton1Click:Connect(function()
-                    open = not open
-                    ColorModule.Size = UDim2_new(0, 428, 0, (open and 210 or 38))
-                    if open then
-                        update()
-                    end
+                    local pos = ColorTop.AbsolutePosition
+                    window:openColorPicker(text, flag, default, function(color)
+                        ColorView.BackgroundColor3 = color
+                        callback(color)
+                    end, UDim2_new(0, pos.X + 440, 0, pos.Y - 50))
                 end)
-
-                local draggingSV = false
-                local SVBtn = Instance_new("TextButton")
-                SVBtn.Size = UDim2_new(1,0,1,0)
-                SVBtn.BackgroundTransparency = 1
-                SVBtn.Text = ""
-                SVBtn.Parent = SVBox
-                
-                SVBtn.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        draggingSV = true
-                    end
-                end)
-
-                services.UserInputService.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        draggingSV = false
-                    end
-                end)
-
-                services.UserInputService.InputChanged:Connect(function(input)
-                    if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                        local r = SVBox.AbsoluteSize
-                        local p = SVBox.AbsolutePosition
-                        s = math.clamp((mouse.X - p.X) / r.X, 0, 1)
-                        v = math.clamp(1 - ((mouse.Y - p.Y) / r.Y), 0, 1)
-                        update()
-                    end
-                end)
-
-                local draggingHue = false
-                local HueBtn = Instance_new("TextButton")
-                HueBtn.Size = UDim2_new(1,0,1,0)
-                HueBtn.BackgroundTransparency = 1
-                HueBtn.Text = ""
-                HueBtn.Parent = HueSlider
-
-                HueBtn.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        draggingHue = true
-                    end
-                end)
-
-                services.UserInputService.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                        draggingHue = false
-                    end
-                end)
-
-                services.UserInputService.InputChanged:Connect(function(input)
-                    if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                        local r = HueSlider.AbsoluteSize
-                        local p = HueSlider.AbsolutePosition
-                        h = math.clamp(1 - ((mouse.Y - p.Y) / r.Y), 0, 1)
-                        update()
-                    end
-                end)
-
-                update()
             end
 
             function section.Dropdown(section, text, flag, options, callback)
