@@ -1238,7 +1238,6 @@ function library.new(library, name, theme)
                 ColorTop.Name = "ColorTop"
                 ColorTop.Parent = ColorModule
                 ColorTop.BackgroundColor3 = beijingColor
-                ColorTop.Size = UDim2.size(1, 0, 0, 38) -- Wait, UDim2.size is not a thing, use UDim2.new
                 ColorTop.Size = UDim2.new(1, 0, 0, 38)
                 ColorTop.AutoButtonColor = false
                 ColorTop.Font = Enum.Font.GothamSemibold
