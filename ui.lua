@@ -619,22 +619,60 @@ function library.new(library, name, theme)
                 end
                 
                 ToggleBtn.MouseButton1Click:Connect(function()
-                        KeybindValue.Text = keyTxt
-                        return
-                    end
-                    if banned[keyName] then
-                        KeybindValue.Text = keyTxt
-                        return
-                    end
-                    task.wait()
-                    bindKey = Enum.KeyCode[keyName]
-                    KeybindValue.Text = shortNames[keyName] or keyName
+                    library.flags[flag] = not library.flags[flag]
+                    updateToggle(library.flags[flag])
+                    callback(library.flags[flag])
+                end)
+                updateToggle(library.flags[flag])
+            end
+
+            function section.Keybind(section, text, default, callback)
+                local bindKey = typeof(default) == "string" and Enum.KeyCode[default] or default
+                local keyTxt = bindKey and bindKey.Name or "None"
+                local banned = {Return = true, Space = true, Tab = true, Backquote = true, CapsLock = true, Escape = true, Unknown = true}
+                local shortNames = {RightControl = 'Right Ctrl', LeftControl = 'Left Ctrl', LeftShift = 'Left Shift', RightShift = 'Right Shift'}
+
+                local KeybindModule = Instance_new("Frame")
+                local KeybindBtn = Instance_new("TextButton")
+                local KeybindValue = Instance_new("TextButton")
+
+                KeybindModule.Name = "KeybindModule"
+                KeybindModule.Parent = Objs
+                KeybindModule.BackgroundTransparency = 1
+                KeybindModule.Size = UDim2_new(0, 428, 0, 38)
+
+                KeybindBtn.Name = "KeybindBtn"
+                KeybindBtn.Parent = KeybindModule
+                KeybindBtn.BackgroundColor3 = beijingColor
+                KeybindBtn.Size = UDim2_new(0, 428, 0, 38)
+                KeybindBtn.AutoButtonColor = false
+                KeybindBtn.Text = "   " .. text
+                KeybindBtn.TextColor3 = zyColor
+                KeybindBtn.TextXAlignment = Enum.TextXAlignment.Left
+                Instance_new("UICorner", KeybindBtn).CornerRadius = UDim.new(0, 6)
+
+                KeybindValue.Name = "KeybindValue"
+                KeybindValue.Parent = KeybindBtn
+                KeybindValue.BackgroundColor3 = Background
+                KeybindValue.Size = UDim2_new(0, 80, 0, 28)
+                KeybindValue.Position = UDim2_new(1, -86, 0.5, -14)
+                KeybindValue.Text = keyTxt
+                KeybindValue.TextColor3 = zyColor
+                Instance_new("UICorner", KeybindValue).CornerRadius = UDim.new(0, 6)
+
+                services.UserInputService.InputBegan:Connect(function(inp, gpe)
+                    if not gpe and inp.KeyCode == bindKey then callback(bindKey.Name) end
                 end)
 
-                KeybindValue:GetPropertyChangedSignal("TextBounds"):Connect(function()
-                    KeybindValue.Size = UDim2_new(0, KeybindValue.TextBounds.X + 30, 0, 28)
+                KeybindValue.MouseButton1Click:Connect(function()
+                    KeybindValue.Text = "..."
+                    local key = services.UserInputService.InputEnded:Wait()
+                    if key.UserInputType == Enum.UserInputType.Keyboard and not banned[key.KeyCode.Name] then
+                        bindKey = key.KeyCode
+                        keyTxt = shortNames[bindKey.Name] or bindKey.Name
+                    end
+                    KeybindValue.Text = keyTxt
                 end)
-                KeybindValue.Size = UDim2_new(0, KeybindValue.TextBounds.X + 30, 0, 28)
             end
 
             function section.Textbox(section, text, flag, default, callback)
@@ -1160,6 +1198,5 @@ function library.new(library, name, theme)
         return tab
     end
     return window
-
 end
 return library
