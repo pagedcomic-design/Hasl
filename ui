@@ -6,6 +6,7 @@ end
 repeat
     task.wait()
 until game:IsLoaded()
+
 local Forums = {}
 local Theme = {
     RedTheme = {
@@ -1706,13 +1707,12 @@ function Forums.new(Themes, close_callback)
             
             local ColorPickerFunc = {}
             local hue, sat, val = defaultColor:ToHSV()
+            local currentHSV = {h = hue, s = sat, v = val}
+            local oldHSV = {h = hue, s = sat, v = val}
 
             local cpFrame = Instance.new("Frame")
             local cpOpen = Instance.new("TextButton")
-            local ms = game:GetService("Players").LocalPlayer:GetMouse()
-            local uis = game:GetService("UserInputService")
             local cpInf = Instance.new("TextLabel")
-            local Sample = Instance.new("ImageLabel")
             local colorBoxContainer = Instance.new("Frame")
             local colorBox = Instance.new("Frame")
             local uiCorner = Instance.new("UICorner")
@@ -1723,70 +1723,17 @@ function Forums.new(Themes, close_callback)
             cpFrame.BorderColor3 = Color3.fromRGB(33, 33, 33)
             cpFrame.ClipsDescendants = true
             cpFrame.Size = UDim2.new(0, 474, 0, 32)
-            
-            local cpWindow = Instance.new("Frame")
-            cpWindow.Name = "ColorPickerPopup"
-            cpWindow.Parent = _81asf91z9asf1
-            cpWindow.Size = UDim2.new(0, 200, 0, 240)
-            cpWindow.Position = UDim2.new(0.5, -100, 0.5, -120)
-            cpWindow.BackgroundColor3 = Themes.DropFrameColor
-            cpWindow.BorderColor3 = Color3.fromRGB(33, 33, 33)
-            cpWindow.ZIndex = 100
-            cpWindow.Visible = false
-            cpWindow.Active = true
-            local UICorner2 = Instance.new("UICorner", cpWindow)
-            UICorner2.CornerRadius = UDim.new(0, 5)
-
-            local antiMisclick = Instance.new("TextButton")
-            antiMisclick.Name = "AntiMisclick"
-            antiMisclick.Parent = _81asf91z9asf1
-            antiMisclick.Size = UDim2.new(1, 0, 1, 0)
-            antiMisclick.BackgroundTransparency = 1
-            antiMisclick.ZIndex = 99
-            antiMisclick.Text = ""
-            antiMisclick.Visible = false
-            
-            antiMisclick.MouseButton1Click:Connect(function()
-                cpWindow.Visible = false
-                antiMisclick.Visible = false
-            end)
+            cpFrame.BackgroundTransparency = 1 
 
             cpOpen.Name = "cpOpen"
             cpOpen.Parent = cpFrame
             cpOpen.BackgroundColor3 = Themes.DropOpenColor
             cpOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
-            cpOpen.ClipsDescendants = true
-            cpOpen.Size = UDim2.new(0, 474, 0, 32)
+            cpOpen.Size = UDim2.new(1, 0, 1, 0)
             cpOpen.AutoButtonColor = false
             cpOpen.Font = Enum.Font.SourceSans
             cpOpen.Text = ""
             cpOpen.TextColor3 = Color3.fromRGB(0, 0, 0)
-            cpOpen.TextSize = 14.000
-            
-            cpOpen.MouseButton1Click:Connect(function()
-                cpWindow.Visible = true
-                antiMisclick.Visible = true
-                
-                local c = Sample:Clone()
-                c.Parent = cpOpen
-                local x, y = (ms.X - c.AbsolutePosition.X), (ms.Y - c.AbsolutePosition.Y)
-                c.Position = UDim2.new(0, x, 0, y)
-                local len, size = 0.35, nil
-                if cpOpen.AbsoluteSize.X >= cpOpen.AbsoluteSize.Y then
-                    size = (cpOpen.AbsoluteSize.X * 1.5)
-                else
-                    size = (cpOpen.AbsoluteSize.Y * 1.5)
-                end
-                game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, size, 0, size),
-                    Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
-                }):Play()
-                for i = 1, 10 do
-                    c.ImageTransparency = c.ImageTransparency + 0.05
-                    task.wait(len / 12)
-                end
-                c:Destroy()
-            end)
             
             cpOpen.MouseEnter:Connect(function()
                 game.TweenService:Create(cpOpen, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.MouseEnterColor }):Play()
@@ -1808,15 +1755,6 @@ function Forums.new(Themes, close_callback)
             cpInf.TextSize = 14.000
             cpInf.TextXAlignment = Enum.TextXAlignment.Left
 
-            Sample.Name = "Sample"
-            Sample.Parent = cpOpen
-            Sample.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Sample.BackgroundTransparency = 1.000
-            Sample.ZIndex = 2
-            Sample.Image = "http://www.roblox.com/asset/?id=4560909609"
-            Sample.ImageColor3 = Themes.SampleColor
-            Sample.ImageTransparency = 0.600
-
             colorBoxContainer.Name = "colorBoxContainer"
             colorBoxContainer.Parent = cpOpen
             colorBoxContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1830,68 +1768,126 @@ function Forums.new(Themes, close_callback)
             colorBox.BackgroundColor3 = defaultColor
             colorBox.Size = UDim2.new(1, 0, 1, 0)
             colorBox.ZIndex = 5
+
             uiCorner.Parent = colorBox
             uiCorner.CornerRadius = UDim.new(0, 4)
 
-            local mapBg = Instance.new("TextButton")
-            mapBg.Name = "SatValMap"
-            mapBg.Parent = cpWindow
-            mapBg.Size = UDim2.new(0, 180, 0, 180)
-            mapBg.Position = UDim2.new(0, 10, 0, 10)
+            local screenGui = game.CoreGui:FindFirstChild(getgenv().libName)
+            if not screenGui then
+                for _, v in pairs(game.CoreGui:GetChildren()) do
+                    if v.Name == "Hasl" then screenGui = v break end
+                end
+            end
+
+            -- Background Mask for anti-accidental touch
+            local mask = Instance.new("TextButton")
+            mask.Name = "ColorPickerMask"
+            mask.Size = UDim2.new(2, 0, 2, 0) -- Extra large to cover dragging offsets
+            mask.Position = UDim2.new(-0.5, 0, -0.5, 0)
+            mask.BackgroundTransparency = 1
+            mask.ZIndex = 999
+            mask.Visible = false
+            mask.Text = ""
+            mask.Parent = screenGui or cpOpen
+
+            local popup = Instance.new("Frame")
+            popup.Name = "ColorPickerPopup"
+            popup.Size = UDim2.new(0, 240, 0, 230)
+            popup.BackgroundColor3 = Themes.MainColor
+            popup.BorderColor3 = Color3.fromRGB(27, 27, 27)
+            popup.Visible = false
+            popup.ZIndex = 1000
+            popup.Active = true
+            popup.Draggable = true 
+            popup.Parent = screenGui or cpOpen
+            
+            local popupCorner = Instance.new("UICorner", popup)
+            popupCorner.CornerRadius = UDim.new(0, 6)
+
+            local titleLbl = Instance.new("TextLabel", popup)
+            titleLbl.BackgroundTransparency = 1
+            titleLbl.Size = UDim2.new(1, 0, 0, 24)
+            titleLbl.Font = Enum.Font.Gotham
+            titleLbl.Text = cTitle .. " (弹窗模式)"
+            titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            titleLbl.TextSize = 12
+            titleLbl.ZIndex = 1001
+
+            local btnContainer = Instance.new("Frame", popup)
+            btnContainer.BackgroundTransparency = 1
+            btnContainer.Size = UDim2.new(1, 0, 0, 30)
+            btnContainer.Position = UDim2.new(0, 0, 1, -30)
+            btnContainer.ZIndex = 1001
+
+            local confirmBtn = Instance.new("TextButton", btnContainer)
+            confirmBtn.Size = UDim2.new(0.5, -10, 0, 20)
+            confirmBtn.Position = UDim2.new(0, 6, 0, 4)
+            confirmBtn.BackgroundColor3 = Themes.SectionMainColor
+            confirmBtn.Text = "确定 / Apply"
+            confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            confirmBtn.Font = Enum.Font.Gotham
+            confirmBtn.TextSize = 12
+            confirmBtn.ZIndex = 1002
+            Instance.new("UICorner", confirmBtn).CornerRadius = UDim.new(0, 4)
+
+            local cancelBtn = Instance.new("TextButton", btnContainer)
+            cancelBtn.Size = UDim2.new(0.5, -10, 0, 20)
+            cancelBtn.Position = UDim2.new(0.5, 4, 0, 4)
+            cancelBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            cancelBtn.Text = "取消 / Cancel"
+            cancelBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+            cancelBtn.Font = Enum.Font.Gotham
+            cancelBtn.TextSize = 12
+            cancelBtn.ZIndex = 1002
+            Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 4)
+
+            local mapBg = Instance.new("TextButton", popup)
+            mapBg.Size = UDim2.new(0, 220, 0, 130)
+            mapBg.Position = UDim2.new(0, 10, 0, 30)
             mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
             mapBg.AutoButtonColor = false
             mapBg.Text = ""
-            mapBg.ZIndex = 101
+            mapBg.ZIndex = 1001
+            Instance.new("UICorner", mapBg).CornerRadius = UDim.new(0, 4)
         
-            local whiteLayer = Instance.new("Frame")
+            local whiteLayer = Instance.new("Frame", mapBg)
             whiteLayer.Size = UDim2.new(1,0,1,0)
-            whiteLayer.Parent = mapBg
             whiteLayer.BackgroundColor3 = Color3.fromRGB(255,255,255)
             whiteLayer.BorderSizePixel = 0
-            whiteLayer.ZIndex = 101
-            local whiteGradient = Instance.new("UIGradient")
-            whiteGradient.Parent = whiteLayer
-            whiteGradient.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 0),
-                NumberSequenceKeypoint.new(1, 1)
-            })
+            whiteLayer.ZIndex = 1002
+            local whiteGradient = Instance.new("UIGradient", whiteLayer)
+            whiteGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+            Instance.new("UICorner", whiteLayer).CornerRadius = UDim.new(0, 4)
         
-            local blackLayer = Instance.new("Frame")
+            local blackLayer = Instance.new("Frame", mapBg)
             blackLayer.Size = UDim2.new(1,0,1,0)
-            blackLayer.Parent = mapBg
             blackLayer.BackgroundColor3 = Color3.fromRGB(0,0,0)
             blackLayer.BorderSizePixel = 0
-            blackLayer.ZIndex = 101
-            local blackGradient = Instance.new("UIGradient")
-            blackGradient.Parent = blackLayer
-            blackGradient.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 1),
-                NumberSequenceKeypoint.new(1, 0)
-            })
+            blackLayer.ZIndex = 1003
+            local blackGradient = Instance.new("UIGradient", blackLayer)
+            blackGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
             blackGradient.Rotation = 90
+            Instance.new("UICorner", blackLayer).CornerRadius = UDim.new(0, 4)
         
-            local mapPointer = Instance.new("Frame")
+            local mapPointer = Instance.new("Frame", mapBg)
             mapPointer.Size = UDim2.new(0, 8, 0, 8)
             mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
             mapPointer.AnchorPoint = Vector2.new(0.5, 0.5)
-            mapPointer.Parent = mapBg
             mapPointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
             mapPointer.BorderColor3 = Color3.fromRGB(0,0,0)
-            mapPointer.ZIndex = 102
+            mapPointer.ZIndex = 1004
             Instance.new("UICorner", mapPointer).CornerRadius = UDim.new(1, 0)
         
-            local hueSlider = Instance.new("TextButton")
-            hueSlider.Size = UDim2.new(0, 180, 0, 20)
-            hueSlider.Position = UDim2.new(0, 10, 0, 205)
-            hueSlider.Parent = cpWindow
+            local hueSlider = Instance.new("TextButton", popup)
+            hueSlider.Size = UDim2.new(0, 220, 0, 16)
+            hueSlider.Position = UDim2.new(0, 10, 0, 170)
             hueSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
             hueSlider.AutoButtonColor = false
             hueSlider.Text = ""
-            hueSlider.ZIndex = 101
-            Instance.new("UICorner", hueSlider).CornerRadius = UDim.new(0, 5)
+            hueSlider.ZIndex = 1001
+            Instance.new("UICorner", hueSlider).CornerRadius = UDim.new(0, 4)
         
-            local hueGradient = Instance.new("UIGradient")
-            hueGradient.Parent = hueSlider
+            local hueGradient = Instance.new("UIGradient", hueSlider)
             hueGradient.Color = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
                 ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
@@ -1902,22 +1898,23 @@ function Forums.new(Themes, close_callback)
                 ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
             })
         
-            local huePointer = Instance.new("Frame")
+            local huePointer = Instance.new("Frame", hueSlider)
             huePointer.Size = UDim2.new(0, 4, 1, 0)
             huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
             huePointer.AnchorPoint = Vector2.new(0.5, 0)
-            huePointer.Parent = hueSlider
             huePointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
             huePointer.BorderColor3 = Color3.fromRGB(0,0,0)
-            huePointer.ZIndex = 102
-        
-            local function updateColor()
-                local newColor = Color3.fromHSV(hue, sat, val)
-                colorBox.BackgroundColor3 = newColor
-                mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
-                callback(newColor)
+            huePointer.ZIndex = 1004
+
+            local uis = game:GetService("UserInputService")
+            
+            local function syncPointers()
+                mapPointer.Position = UDim2.new(currentHSV.s, 0, 1 - currentHSV.v, 0)
+                huePointer.Position = UDim2.new(1 - currentHSV.h, 0, 0, 0)
+                mapBg.BackgroundColor3 = Color3.fromHSV(currentHSV.h, 1, 1)
+                colorBox.BackgroundColor3 = Color3.fromHSV(currentHSV.h, currentHSV.s, currentHSV.v)
             end
-        
+
             local mapDragging = false
             mapBg.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1925,10 +1922,9 @@ function Forums.new(Themes, close_callback)
                     local function moveMap(pos)
                         local relX = math.clamp(pos.X - mapBg.AbsolutePosition.X, 0, mapBg.AbsoluteSize.X)
                         local relY = math.clamp(pos.Y - mapBg.AbsolutePosition.Y, 0, mapBg.AbsoluteSize.Y)
-                        sat = relX / mapBg.AbsoluteSize.X
-                        val = 1 - (relY / mapBg.AbsoluteSize.Y)
-                        mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
-                        updateColor()
+                        currentHSV.s = relX / mapBg.AbsoluteSize.X
+                        currentHSV.v = 1 - (relY / mapBg.AbsoluteSize.Y)
+                        syncPointers()
                     end
                     moveMap(input.Position)
                     
@@ -1954,9 +1950,8 @@ function Forums.new(Themes, close_callback)
                     hueDragging = true
                     local function moveHue(pos)
                         local relX = math.clamp(pos.X - hueSlider.AbsolutePosition.X, 0, hueSlider.AbsoluteSize.X)
-                        hue = 1 - (relX / hueSlider.AbsoluteSize.X)
-                        huePointer.Position = UDim2.new(relX / hueSlider.AbsoluteSize.X, 0, 0, 0)
-                        updateColor()
+                        currentHSV.h = 1 - (relX / hueSlider.AbsoluteSize.X)
+                        syncPointers()
                     end
                     moveHue(input.Position)
                     
@@ -1975,17 +1970,61 @@ function Forums.new(Themes, close_callback)
                     end)
                 end
             end)
-        
+
+            cpOpen.MouseButton1Click:Connect(function()
+                if not popup.Visible then
+                    local absPos = cpOpen.AbsolutePosition
+                    -- Center popup relative to button but check screen bounds
+                    if screenGui and screenGui:IsA("ScreenGui") then
+                        local screenY = screenGui.AbsoluteSize.Y
+                        local screenX = screenGui.AbsoluteSize.X
+                        local destX = absPos.X + 240
+                        local destY = absPos.Y - 50
+                        if destY + 230 > screenY then destY = screenY - 240 end
+                        if destY < 0 then destY = 10 end
+                        if destX + 240 > screenX then destX = absPos.X - 250 end
+                        popup.Position = UDim2.new(0, destX, 0, destY)
+                    else
+                        popup.Position = UDim2.new(0, absPos.X + 240, 0, absPos.Y - 50)
+                    end
+                    
+                    oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                    currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                    syncPointers()
+                    popup.Visible = true
+                    mask.Visible = true
+                else
+                    popup.Visible = false
+                    mask.Visible = false
+                end
+            end)
+
+            local function closePopup(apply)
+                popup.Visible = false
+                mask.Visible = false
+                if apply then
+                    hue, sat, val = currentHSV.h, currentHSV.s, currentHSV.v
+                    oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                    callback(Color3.fromHSV(hue, sat, val))
+                else
+                    currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                    syncPointers()
+                end
+            end
+
+            confirmBtn.MouseButton1Click:Connect(function() closePopup(true) end)
+            cancelBtn.MouseButton1Click:Connect(function() closePopup(false) end)
+            mask.MouseButton1Click:Connect(function() closePopup(false) end)
+
             function ColorPickerFunc:Update(newColor)
                 hue, sat, val = newColor:ToHSV()
-                updateColor()
-                mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
-                huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
+                oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                syncPointers()
             end
 
             return ColorPickerFunc
         end
-
 
         function fElements:Seperator()
             local seperator = Instance.new("Frame")
@@ -3038,13 +3077,12 @@ function Forums.new(Themes, close_callback)
                 
                 local ColorPickerFunc = {}
                 local hue, sat, val = defaultColor:ToHSV()
+                local currentHSV = {h = hue, s = sat, v = val}
+                local oldHSV = {h = hue, s = sat, v = val}
 
                 local cpFrame = Instance.new("Frame")
                 local cpOpen = Instance.new("TextButton")
-                local ms = game:GetService("Players").LocalPlayer:GetMouse()
-                local uis = game:GetService("UserInputService")
                 local cpInf = Instance.new("TextLabel")
-                local Sample = Instance.new("ImageLabel")
                 local colorBoxContainer = Instance.new("Frame")
                 local colorBox = Instance.new("Frame")
                 local uiCorner = Instance.new("UICorner")
@@ -3055,70 +3093,17 @@ function Forums.new(Themes, close_callback)
                 cpFrame.BorderColor3 = Color3.fromRGB(33, 33, 33)
                 cpFrame.ClipsDescendants = true
                 cpFrame.Size = UDim2.new(0, 474, 0, 32)
-                
-                local cpWindow = Instance.new("Frame")
-                cpWindow.Name = "ColorPickerPopup"
-                cpWindow.Parent = _81asf91z9asf1
-                cpWindow.Size = UDim2.new(0, 200, 0, 240)
-                cpWindow.Position = UDim2.new(0.5, -100, 0.5, -120)
-                cpWindow.BackgroundColor3 = Themes.DropFrameColor
-                cpWindow.BorderColor3 = Color3.fromRGB(33, 33, 33)
-                cpWindow.ZIndex = 100
-                cpWindow.Visible = false
-                cpWindow.Active = true
-                local UICorner2 = Instance.new("UICorner", cpWindow)
-                UICorner2.CornerRadius = UDim.new(0, 5)
-
-                local antiMisclick = Instance.new("TextButton")
-                antiMisclick.Name = "AntiMisclick"
-                antiMisclick.Parent = _81asf91z9asf1
-                antiMisclick.Size = UDim2.new(1, 0, 1, 0)
-                antiMisclick.BackgroundTransparency = 1
-                antiMisclick.ZIndex = 99
-                antiMisclick.Text = ""
-                antiMisclick.Visible = false
-                
-                antiMisclick.MouseButton1Click:Connect(function()
-                    cpWindow.Visible = false
-                    antiMisclick.Visible = false
-                end)
+                cpFrame.BackgroundTransparency = 1 
 
                 cpOpen.Name = "cpOpen"
                 cpOpen.Parent = cpFrame
                 cpOpen.BackgroundColor3 = Themes.DropOpenColor
                 cpOpen.BorderColor3 = Color3.fromRGB(27, 27, 27)
-                cpOpen.ClipsDescendants = true
-                cpOpen.Size = UDim2.new(0, 474, 0, 32)
+                cpOpen.Size = UDim2.new(1, 0, 1, 0)
                 cpOpen.AutoButtonColor = false
                 cpOpen.Font = Enum.Font.SourceSans
                 cpOpen.Text = ""
                 cpOpen.TextColor3 = Color3.fromRGB(0, 0, 0)
-                cpOpen.TextSize = 14.000
-                
-                cpOpen.MouseButton1Click:Connect(function()
-                    cpWindow.Visible = true
-                    antiMisclick.Visible = true
-                    
-                    local c = Sample:Clone()
-                    c.Parent = cpOpen
-                    local x, y = (ms.X - c.AbsolutePosition.X), (ms.Y - c.AbsolutePosition.Y)
-                    c.Position = UDim2.new(0, x, 0, y)
-                    local len, size = 0.35, nil
-                    if cpOpen.AbsoluteSize.X >= cpOpen.AbsoluteSize.Y then
-                        size = (cpOpen.AbsoluteSize.X * 1.5)
-                    else
-                        size = (cpOpen.AbsoluteSize.Y * 1.5)
-                    end
-                    game:GetService("TweenService"):Create(c, TweenInfo.new(len, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(0, size, 0, size),
-                        Position = UDim2.new(0.5, (-size / 2), 0.5, (-size / 2))
-                    }):Play()
-                    for i = 1, 10 do
-                        c.ImageTransparency = c.ImageTransparency + 0.05
-                        task.wait(len / 12)
-                    end
-                    c:Destroy()
-                end)
                 
                 cpOpen.MouseEnter:Connect(function()
                     game.TweenService:Create(cpOpen, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { BackgroundColor3 = Themes.MouseEnterColor }):Play()
@@ -3140,15 +3125,6 @@ function Forums.new(Themes, close_callback)
                 cpInf.TextSize = 14.000
                 cpInf.TextXAlignment = Enum.TextXAlignment.Left
 
-                Sample.Name = "Sample"
-                Sample.Parent = cpOpen
-                Sample.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Sample.BackgroundTransparency = 1.000
-                Sample.ZIndex = 2
-                Sample.Image = "http://www.roblox.com/asset/?id=4560909609"
-                Sample.ImageColor3 = Themes.SampleColor
-                Sample.ImageTransparency = 0.600
-
                 colorBoxContainer.Name = "colorBoxContainer"
                 colorBoxContainer.Parent = cpOpen
                 colorBoxContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -3162,68 +3138,126 @@ function Forums.new(Themes, close_callback)
                 colorBox.BackgroundColor3 = defaultColor
                 colorBox.Size = UDim2.new(1, 0, 1, 0)
                 colorBox.ZIndex = 5
+
                 uiCorner.Parent = colorBox
                 uiCorner.CornerRadius = UDim.new(0, 4)
 
-                local mapBg = Instance.new("TextButton")
-                mapBg.Name = "SatValMap"
-                mapBg.Parent = cpWindow
-                mapBg.Size = UDim2.new(0, 180, 0, 180)
-                mapBg.Position = UDim2.new(0, 10, 0, 10)
+                local screenGui = game.CoreGui:FindFirstChild(getgenv().libName)
+                if not screenGui then
+                    for _, v in pairs(game.CoreGui:GetChildren()) do
+                        if v.Name == "Hasl" then screenGui = v break end
+                    end
+                end
+
+                -- Background Mask for anti-accidental touch
+                local mask = Instance.new("TextButton")
+                mask.Name = "ColorPickerMask"
+                mask.Size = UDim2.new(2, 0, 2, 0) -- Extra large to cover dragging offsets
+                mask.Position = UDim2.new(-0.5, 0, -0.5, 0)
+                mask.BackgroundTransparency = 1
+                mask.ZIndex = 999
+                mask.Visible = false
+                mask.Text = ""
+                mask.Parent = screenGui or cpOpen
+
+                local popup = Instance.new("Frame")
+                popup.Name = "ColorPickerPopup"
+                popup.Size = UDim2.new(0, 240, 0, 230)
+                popup.BackgroundColor3 = Themes.MainColor
+                popup.BorderColor3 = Color3.fromRGB(27, 27, 27)
+                popup.Visible = false
+                popup.ZIndex = 1000
+                popup.Active = true
+                popup.Draggable = true 
+                popup.Parent = screenGui or cpOpen
+                
+                local popupCorner = Instance.new("UICorner", popup)
+                popupCorner.CornerRadius = UDim.new(0, 6)
+
+                local titleLbl = Instance.new("TextLabel", popup)
+                titleLbl.BackgroundTransparency = 1
+                titleLbl.Size = UDim2.new(1, 0, 0, 24)
+                titleLbl.Font = Enum.Font.Gotham
+                titleLbl.Text = cTitle .. " (弹窗模式)"
+                titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+                titleLbl.TextSize = 12
+                titleLbl.ZIndex = 1001
+
+                local btnContainer = Instance.new("Frame", popup)
+                btnContainer.BackgroundTransparency = 1
+                btnContainer.Size = UDim2.new(1, 0, 0, 30)
+                btnContainer.Position = UDim2.new(0, 0, 1, -30)
+                btnContainer.ZIndex = 1001
+
+                local confirmBtn = Instance.new("TextButton", btnContainer)
+                confirmBtn.Size = UDim2.new(0.5, -10, 0, 20)
+                confirmBtn.Position = UDim2.new(0, 6, 0, 4)
+                confirmBtn.BackgroundColor3 = Themes.SectionMainColor
+                confirmBtn.Text = "确定 / Apply"
+                confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                confirmBtn.Font = Enum.Font.Gotham
+                confirmBtn.TextSize = 12
+                confirmBtn.ZIndex = 1002
+                Instance.new("UICorner", confirmBtn).CornerRadius = UDim.new(0, 4)
+
+                local cancelBtn = Instance.new("TextButton", btnContainer)
+                cancelBtn.Size = UDim2.new(0.5, -10, 0, 20)
+                cancelBtn.Position = UDim2.new(0.5, 4, 0, 4)
+                cancelBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                cancelBtn.Text = "取消 / Cancel"
+                cancelBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+                cancelBtn.Font = Enum.Font.Gotham
+                cancelBtn.TextSize = 12
+                cancelBtn.ZIndex = 1002
+                Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 4)
+
+                local mapBg = Instance.new("TextButton", popup)
+                mapBg.Size = UDim2.new(0, 220, 0, 130)
+                mapBg.Position = UDim2.new(0, 10, 0, 30)
                 mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
                 mapBg.AutoButtonColor = false
                 mapBg.Text = ""
-                mapBg.ZIndex = 101
+                mapBg.ZIndex = 1001
+                Instance.new("UICorner", mapBg).CornerRadius = UDim.new(0, 4)
             
-                local whiteLayer = Instance.new("Frame")
+                local whiteLayer = Instance.new("Frame", mapBg)
                 whiteLayer.Size = UDim2.new(1,0,1,0)
-                whiteLayer.Parent = mapBg
                 whiteLayer.BackgroundColor3 = Color3.fromRGB(255,255,255)
                 whiteLayer.BorderSizePixel = 0
-                whiteLayer.ZIndex = 101
-                local whiteGradient = Instance.new("UIGradient")
-                whiteGradient.Parent = whiteLayer
-                whiteGradient.Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 0),
-                    NumberSequenceKeypoint.new(1, 1)
-                })
+                whiteLayer.ZIndex = 1002
+                local whiteGradient = Instance.new("UIGradient", whiteLayer)
+                whiteGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+                Instance.new("UICorner", whiteLayer).CornerRadius = UDim.new(0, 4)
             
-                local blackLayer = Instance.new("Frame")
+                local blackLayer = Instance.new("Frame", mapBg)
                 blackLayer.Size = UDim2.new(1,0,1,0)
-                blackLayer.Parent = mapBg
                 blackLayer.BackgroundColor3 = Color3.fromRGB(0,0,0)
                 blackLayer.BorderSizePixel = 0
-                blackLayer.ZIndex = 101
-                local blackGradient = Instance.new("UIGradient")
-                blackGradient.Parent = blackLayer
-                blackGradient.Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 1),
-                    NumberSequenceKeypoint.new(1, 0)
-                })
+                blackLayer.ZIndex = 1003
+                local blackGradient = Instance.new("UIGradient", blackLayer)
+                blackGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
                 blackGradient.Rotation = 90
+                Instance.new("UICorner", blackLayer).CornerRadius = UDim.new(0, 4)
             
-                local mapPointer = Instance.new("Frame")
+                local mapPointer = Instance.new("Frame", mapBg)
                 mapPointer.Size = UDim2.new(0, 8, 0, 8)
                 mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
                 mapPointer.AnchorPoint = Vector2.new(0.5, 0.5)
-                mapPointer.Parent = mapBg
                 mapPointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
                 mapPointer.BorderColor3 = Color3.fromRGB(0,0,0)
-                mapPointer.ZIndex = 102
+                mapPointer.ZIndex = 1004
                 Instance.new("UICorner", mapPointer).CornerRadius = UDim.new(1, 0)
             
-                local hueSlider = Instance.new("TextButton")
-                hueSlider.Size = UDim2.new(0, 180, 0, 20)
-                hueSlider.Position = UDim2.new(0, 10, 0, 205)
-                hueSlider.Parent = cpWindow
+                local hueSlider = Instance.new("TextButton", popup)
+                hueSlider.Size = UDim2.new(0, 220, 0, 16)
+                hueSlider.Position = UDim2.new(0, 10, 0, 170)
                 hueSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
                 hueSlider.AutoButtonColor = false
                 hueSlider.Text = ""
-                hueSlider.ZIndex = 101
-                Instance.new("UICorner", hueSlider).CornerRadius = UDim.new(0, 5)
+                hueSlider.ZIndex = 1001
+                Instance.new("UICorner", hueSlider).CornerRadius = UDim.new(0, 4)
             
-                local hueGradient = Instance.new("UIGradient")
-                hueGradient.Parent = hueSlider
+                local hueGradient = Instance.new("UIGradient", hueSlider)
                 hueGradient.Color = ColorSequence.new({
                     ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
                     ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
@@ -3234,22 +3268,23 @@ function Forums.new(Themes, close_callback)
                     ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
                 })
             
-                local huePointer = Instance.new("Frame")
+                local huePointer = Instance.new("Frame", hueSlider)
                 huePointer.Size = UDim2.new(0, 4, 1, 0)
                 huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
                 huePointer.AnchorPoint = Vector2.new(0.5, 0)
-                huePointer.Parent = hueSlider
                 huePointer.BackgroundColor3 = Color3.fromRGB(255,255,255)
                 huePointer.BorderColor3 = Color3.fromRGB(0,0,0)
-                huePointer.ZIndex = 102
-            
-                local function updateColor()
-                    local newColor = Color3.fromHSV(hue, sat, val)
-                    colorBox.BackgroundColor3 = newColor
-                    mapBg.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
-                    callback(newColor)
+                huePointer.ZIndex = 1004
+
+                local uis = game:GetService("UserInputService")
+                
+                local function syncPointers()
+                    mapPointer.Position = UDim2.new(currentHSV.s, 0, 1 - currentHSV.v, 0)
+                    huePointer.Position = UDim2.new(1 - currentHSV.h, 0, 0, 0)
+                    mapBg.BackgroundColor3 = Color3.fromHSV(currentHSV.h, 1, 1)
+                    colorBox.BackgroundColor3 = Color3.fromHSV(currentHSV.h, currentHSV.s, currentHSV.v)
                 end
-            
+
                 local mapDragging = false
                 mapBg.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -3257,10 +3292,9 @@ function Forums.new(Themes, close_callback)
                         local function moveMap(pos)
                             local relX = math.clamp(pos.X - mapBg.AbsolutePosition.X, 0, mapBg.AbsoluteSize.X)
                             local relY = math.clamp(pos.Y - mapBg.AbsolutePosition.Y, 0, mapBg.AbsoluteSize.Y)
-                            sat = relX / mapBg.AbsoluteSize.X
-                            val = 1 - (relY / mapBg.AbsoluteSize.Y)
-                            mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
-                            updateColor()
+                            currentHSV.s = relX / mapBg.AbsoluteSize.X
+                            currentHSV.v = 1 - (relY / mapBg.AbsoluteSize.Y)
+                            syncPointers()
                         end
                         moveMap(input.Position)
                         
@@ -3286,9 +3320,8 @@ function Forums.new(Themes, close_callback)
                         hueDragging = true
                         local function moveHue(pos)
                             local relX = math.clamp(pos.X - hueSlider.AbsolutePosition.X, 0, hueSlider.AbsoluteSize.X)
-                            hue = 1 - (relX / hueSlider.AbsoluteSize.X)
-                            huePointer.Position = UDim2.new(relX / hueSlider.AbsoluteSize.X, 0, 0, 0)
-                            updateColor()
+                            currentHSV.h = 1 - (relX / hueSlider.AbsoluteSize.X)
+                            syncPointers()
                         end
                         moveHue(input.Position)
                         
@@ -3307,17 +3340,61 @@ function Forums.new(Themes, close_callback)
                         end)
                     end
                 end)
-            
+
+                cpOpen.MouseButton1Click:Connect(function()
+                    if not popup.Visible then
+                        local absPos = cpOpen.AbsolutePosition
+                        -- Center popup relative to button but check screen bounds
+                        if screenGui and screenGui:IsA("ScreenGui") then
+                            local screenY = screenGui.AbsoluteSize.Y
+                            local screenX = screenGui.AbsoluteSize.X
+                            local destX = absPos.X + 240
+                            local destY = absPos.Y - 50
+                            if destY + 230 > screenY then destY = screenY - 240 end
+                            if destY < 0 then destY = 10 end
+                            if destX + 240 > screenX then destX = absPos.X - 250 end
+                            popup.Position = UDim2.new(0, destX, 0, destY)
+                        else
+                            popup.Position = UDim2.new(0, absPos.X + 240, 0, absPos.Y - 50)
+                        end
+                        
+                        oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                        currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                        syncPointers()
+                        popup.Visible = true
+                        mask.Visible = true
+                    else
+                        popup.Visible = false
+                        mask.Visible = false
+                    end
+                end)
+
+                local function closePopup(apply)
+                    popup.Visible = false
+                    mask.Visible = false
+                    if apply then
+                        hue, sat, val = currentHSV.h, currentHSV.s, currentHSV.v
+                        oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                        callback(Color3.fromHSV(hue, sat, val))
+                    else
+                        currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                        syncPointers()
+                    end
+                end
+
+                confirmBtn.MouseButton1Click:Connect(function() closePopup(true) end)
+                cancelBtn.MouseButton1Click:Connect(function() closePopup(false) end)
+                mask.MouseButton1Click:Connect(function() closePopup(false) end)
+
                 function ColorPickerFunc:Update(newColor)
                     hue, sat, val = newColor:ToHSV()
-                    updateColor()
-                    mapPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
-                    huePointer.Position = UDim2.new(1 - hue, 0, 0, 0)
+                    oldHSV.h, oldHSV.s, oldHSV.v = hue, sat, val
+                    currentHSV.h, currentHSV.s, currentHSV.v = oldHSV.h, oldHSV.s, oldHSV.v
+                    syncPointers()
                 end
 
                 return ColorPickerFunc
             end
-
 
 
             function fElements:Seperator()
