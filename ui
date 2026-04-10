@@ -23,7 +23,7 @@ function Tween(obj, t, data)
 end
 
 function Ripple(obj)
-    spawn(function()
+    task.spawn(function()
         if obj.ClipsDescendants ~= true then
             obj.ClipsDescendants = true
         end
@@ -43,11 +43,11 @@ function Ripple(obj)
             Position = UDim2.new(-5.5, 0, -5.5, 0),
             Size = UDim2.new(12, 0, 12, 0)
         })
-        wait(0.15)
+        task.wait(0.15)
         Tween(Ripple, {.3, 'Linear', 'InOut'}, {
             ImageTransparency = 1
         })
-        wait(.3)
+        task.wait(.3)
         Ripple:Destroy()
     end)
 end
@@ -204,7 +204,6 @@ function library.new(library, name, theme)
     Main.Size = UDim2.new(0, 572, 0, 353)
     Main.ZIndex = 1
     Main.Active = true
-    Main.Draggable = true
     services.UserInputService.InputEnded:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftControl then
             if Main.Visible == true then
@@ -263,9 +262,9 @@ function library.new(library, name, theme)
 
     function toggleui()
         toggled = not toggled
-        spawn(function()
+        task.spawn(function()
             if toggled then
-                wait(0.3)
+                task.wait(0.3)
             end
         end)
         Tween(Main, {0.3, 'Sine', 'InOut'}, {
@@ -428,7 +427,7 @@ function library.new(library, name, theme)
     Open.TextColor3 = Color3.fromRGB(255, 255, 255)
     Open.TextSize = 14.000
     Open.Active = true
-    Open.Draggable = true
+    drag(Open)
     Open.MouseButton1Click:Connect(function()
         Main.Visible = not Main.Visible
     end)
@@ -490,7 +489,7 @@ function library.new(library, name, theme)
         TabL.Padding = UDim.new(0, 4)
 
         TabBtn.MouseButton1Click:Connect(function()
-            spawn(function()
+            task.spawn(function()
                 Ripple(TabBtn)
             end)
             switchTab({TabIco, Tab})
@@ -629,10 +628,10 @@ function library.new(library, name, theme)
                 BtnC.Parent = Btn
 
                 Btn.MouseButton1Click:Connect(function()
-                    spawn(function()
+                    task.spawn(function()
                         Ripple(Btn)
                     end)
-                    spawn(callback)
+                    task.spawn(callback)
                 end)
             end
 
@@ -858,7 +857,7 @@ function library.new(library, name, theme)
 
                 KeybindValue.MouseButton1Click:Connect(function()
                     KeybindValue.Text = "..."
-                    wait()
+                    task.wait()
                     local key, uwu = services.UserInputService.InputEnded:Wait()
                     local keyName = tostring(key.KeyCode.Name)
                     if key.UserInputType ~= Enum.UserInputType.Keyboard then
@@ -869,7 +868,7 @@ function library.new(library, name, theme)
                         KeybindValue.Text = keyTxt
                         return
                     end
-                    wait()
+                    task.wait()
                     bindKey = Enum.KeyCode[keyName]
                     KeybindValue.Text = shortNames[keyName] or keyName
                 end)
