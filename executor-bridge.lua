@@ -17,7 +17,7 @@ host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 3,
+firstConnectDepth = 2,
 updateTreeDepth   = 3,
 expandedTreeDepth = 2,
 gameTreeServices  = {
@@ -258,28 +258,45 @@ end
 
 local sanitizeForJson
 sanitizeForJson = function(v, depth)
-depth = depth or 0
-if depth > 50 then return nil end
-local t = type(v)
-if t == 'string' then
-	return v:gsub('%z', '')
-elseif t == 'number' then
-	if v ~= v or v == math.huge or v == -math.huge then return 0 end
-	return v
-elseif t == 'boolean' then
-	return v
-elseif t == 'table' then
-	local clean = {}
-	for k, val in pairs(v) do
-		if type(k) == 'number' then
-			clean[k] = sanitizeForJson(val, depth + 1)
-		elseif type(k) == 'string' then
-			clean[k:gsub('%z', '')] = sanitizeForJson(val, depth + 1)
-		end
-	end
-	return clean
-end
-return nil
+    depth = depth or 0
+    if depth > 50 then return nil end
+    local t = type(v)
+    if t == 'string' then
+        -- Filter control characters except \n, \t, \r
+        return v:gsub("[%c]", function(c)
+            if c == "\n" or c == "\t" or c == "\r" then return c end
+            return ""
+        end):gsub('%z', '')
+    elseif t == 'number' then
+        if v ~= v or v == math.huge or v == -math.huge then return 0 end
+        return v
+    elseif t == 'boolean' then
+        return v
+    elseif t == 'table' then
+        local clean = {}
+        local isArray = #v > 0
+        if isArray then
+            for i = 1, #v do
+                local val = sanitizeForJson(v[i], depth + 1)
+                if val ~= nil then
+                    table.insert(clean, val)
+                end
+            end
+        else
+            for k, val in pairs(v) do
+                local cleanVal = sanitizeForJson(val, depth + 1)
+                if cleanVal ~= nil then
+                    if type(k) == 'string' then
+                        clean[k:gsub('%z', '')] = cleanVal
+                    elseif type(k) == 'number' then
+                        clean[tostring(k)] = cleanVal
+                    end
+                end
+            end
+        end
+        return clean
+    end
+    return nil
 end
 
 local jsonEncode = function(data)
@@ -343,10 +360,13 @@ return healthProbeFailures % 3 == 0
 end
 
 local send = function(data)
-if connection == nil or not connected then return end
-local encoded = jsonEncode(data)
-if encoded == nil then return end
-connection:Send(encoded)
+    if connection == nil or not connected then return end
+    local encoded = jsonEncode(data)
+    if encoded == nil then return end
+    if #encoded > 50000 then
+        print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
+    end
+    connection:Send(encoded)
 end
 
 local sendResult = function(messageType, id, success, payload)
@@ -691,7 +711,10 @@ local function serializeInstance(instance: Instance, depth: number): table?
     local ok, name = pcall(function() return instance.Name end)
     local ok2, className = pcall(function() return instance.ClassName end)
     if not (ok and ok2) then return nil end
-    local node = { name = name, className = className }
+    local function cleanString(s: string): string
+        return s:gsub("[%c]", ""):gsub("%z", "")
+    end
+    local node = { name = cleanString(name), className = cleanString(className) }
     local children = instance:GetChildren()
     if depth == 1 and #children > 0 then
         node.hasChildren = true
