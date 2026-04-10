@@ -573,6 +573,34 @@ function library.new(library, name, theme)
                 end)
             end
 
+            function section.Label(section, text)
+                local LabelModule = Instance_new("Frame")
+                local TextLabel = Instance_new("TextLabel")
+                local LabelC = Instance_new("UICorner")
+
+                LabelModule.Name = "LabelModule"
+                LabelModule.Parent = Objs
+                LabelModule.BackgroundTransparency = 1.000
+                LabelModule.Size = UDim2_new(0, 428, 0, 22)
+
+                TextLabel.Parent = LabelModule
+                TextLabel.BackgroundColor3 = beijingColor
+                TextLabel.Size = UDim2_new(0, 428, 0, 22)
+                TextLabel.Font = Enum.Font.GothamSemibold
+                TextLabel.Text = text
+                TextLabel.TextColor3 = zyColor
+                TextLabel.TextSize = 14.000
+
+                LabelC.CornerRadius = UDim.new(0, 6)
+                LabelC.Parent = TextLabel
+
+                return {
+                    SetText = function(self, newText)
+                        TextLabel.Text = newText
+                    end
+                }
+            end
+
             function section.Toggle(section, text, flag, enabled, callback)
                 library.flags[flag] = enabled or false
                 local ToggleModule = Instance_new("Frame")
