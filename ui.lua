@@ -649,7 +649,7 @@ function library.new(library, name, theme)
                 ToggleBtn.MouseButton1Click:Connect(function()
                     library.flags[flag] = not library.flags[flag]
                     updateToggle(library.flags[flag])
-                    callback(library.flags[flag])
+                    if callback then callback(library.flags[flag]) end
                 end)
                 updateToggle(library.flags[flag])
             end
@@ -689,7 +689,9 @@ function library.new(library, name, theme)
                 Instance_new("UICorner", KeybindValue).CornerRadius = UDim.new(0, 6)
 
                 services.UserInputService.InputBegan:Connect(function(inp, gpe)
-                    if not gpe and inp.KeyCode == bindKey then callback(bindKey.Name) end
+                    if not gpe and inp.KeyCode == bindKey then 
+                        if callback then callback(bindKey.Name) end 
+                    end
                 end)
 
                 KeybindValue.MouseButton1Click:Connect(function()
@@ -1193,7 +1195,7 @@ function library.new(library, name, theme)
 
                     Option.MouseButton1Click:Connect(function()
                         ToggleDropVis()
-                        callback(Option.Text)
+                        if callback then callback(Option.Text) end
                         DropdownText.Text = Option.Text
                         library.flags[flag] = Option.Text
                     end)
