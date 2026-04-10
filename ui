@@ -160,6 +160,8 @@ function library.new(library, name, theme)
     local beijingColor = Color3_fromRGB(57, 57, 57)
   
     local dogent = Instance_new("ScreenGui")
+    dogent.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
     local Main = Instance_new("Frame")
     local TabMain = Instance_new("Frame")
     local MainC = Instance_new("UICorner")
@@ -188,69 +190,99 @@ function library.new(library, name, theme)
     local OriginalCP_Color = nil
     local CP_Open = false
 
+
+
+
     ColorPickerMask.Name = "ColorPickerMask"
-    ColorPickerMask.Parent = dogent
     ColorPickerMask.Size = UDim2_new(10, 0, 10, 0)
     ColorPickerMask.Position = UDim2_new(-5, 0, -5, 0)
     ColorPickerMask.BackgroundTransparency = 1
     ColorPickerMask.Visible = false
     ColorPickerMask.ZIndex = 999990
+    ColorPickerMask.Parent = dogent
 
     ColorPickerPopup.Name = "ColorPickerPopup"
-    ColorPickerPopup.Parent = dogent
     ColorPickerPopup.BackgroundColor3 = Background
     ColorPickerPopup.Size = UDim2_new(0, 240, 0, 250)
     ColorPickerPopup.Visible = false
     ColorPickerPopup.ZIndex = 999991
-    Instance_new("UICorner", ColorPickerPopup).CornerRadius = UDim.new(0, 8)
+    local CPC = Instance_new("UICorner")
+    CPC.CornerRadius = UDim.new(0, 8)
+    CPC.Parent = ColorPickerPopup
+    ColorPickerPopup.Parent = dogent
     drag(ColorPickerPopup, ColorPickerPopup)
 
-    local CP_Header = Instance_new("Frame", ColorPickerPopup)
+    local CP_Header = Instance_new("Frame")
     CP_Header.Size = UDim2_new(1, 0, 0, 28)
     CP_Header.BackgroundTransparency = 1
-    local CP_Title = Instance_new("TextLabel", CP_Header)
+    CP_Header.ZIndex = 999992
+    CP_Header.Parent = ColorPickerPopup
+
+    local CP_Title = Instance_new("TextLabel")
     CP_Title.Size = UDim2_new(1, 0, 1, 0)
     CP_Title.BackgroundTransparency = 1
     CP_Title.Font = Enum.Font.GothamSemibold
     CP_Title.Text = "色彩选择 / Color Picker"
     CP_Title.TextColor3 = zyColor
     CP_Title.TextSize = 14
+    CP_Title.ZIndex = 999993
+    CP_Title.Parent = CP_Header
 
-    local SVMap = Instance_new("Frame", ColorPickerPopup)
+    local SVMap = Instance_new("Frame")
     SVMap.Position = UDim2_new(0, 10, 0, 35)
     SVMap.Size = UDim2_new(0, 220, 0, 130)
-    Instance_new("UICorner", SVMap).CornerRadius = UDim.new(0, 6)
+    SVMap.ZIndex = 999992
+    local SVMC = Instance_new("UICorner")
+    SVMC.CornerRadius = UDim.new(0, 6)
+    SVMC.Parent = SVMap
+    SVMap.Parent = ColorPickerPopup
     
-    local SatGFrame = Instance_new("Frame", SVMap)
+    local SatGFrame = Instance_new("Frame")
     SatGFrame.Size = UDim2_new(1, 0, 1, 0)
     SatGFrame.BackgroundColor3 = zyColor
-    local SatG = Instance_new("UIGradient", SatGFrame)
+    SatGFrame.ZIndex = 999993
+    local SatG = Instance_new("UIGradient")
     SatG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-    Instance_new("UICorner", SatGFrame).CornerRadius = UDim.new(0, 6)
+    SatG.Parent = SatGFrame
+    local SGFC = Instance_new("UICorner")
+    SGFC.CornerRadius = UDim.new(0, 6)
+    SGFC.Parent = SatGFrame
+    SatGFrame.Parent = SVMap
 
-    local ValGFrame = Instance_new("Frame", SVMap)
+    local ValGFrame = Instance_new("Frame")
     ValGFrame.Size = UDim2_new(1, 0, 1, 0)
     ValGFrame.BackgroundColor3 = Color3_new(0,0,0)
-    local ValG = Instance_new("UIGradient", ValGFrame)
+    ValGFrame.ZIndex = 999994
+    local ValG = Instance_new("UIGradient")
     ValG.Rotation = 90
     ValG.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-    Instance_new("UICorner", ValGFrame).CornerRadius = UDim.new(0, 6)
+    ValG.Parent = ValGFrame
+    local VGFC = Instance_new("UICorner")
+    VGFC.CornerRadius = UDim.new(0, 6)
+    VGFC.Parent = ValGFrame
+    ValGFrame.Parent = SVMap
     
-    local SVPointer = Instance_new("Frame", SVMap)
+    local SVPointer = Instance_new("Frame")
     SVPointer.Size = UDim2_new(0, 10, 0, 10)
     SVPointer.AnchorPoint = Vector2.new(0.5, 0.5)
     SVPointer.BackgroundTransparency = 1
-    SVPointer.ZIndex = 10
-    local SVPointerImg = Instance_new("ImageLabel", SVPointer)
+    SVPointer.ZIndex = 999995
+    local SVPointerImg = Instance_new("ImageLabel")
     SVPointerImg.Size = UDim2_new(1, 0, 1, 0)
     SVPointerImg.BackgroundTransparency = 1
     SVPointerImg.Image = "rbxassetid://4975593836"
+    SVPointerImg.ZIndex = 999996
+    SVPointerImg.Parent = SVPointer
+    SVPointer.Parent = SVMap
 
-    local HueSlider = Instance_new("Frame", ColorPickerPopup)
+    local HueSlider = Instance_new("Frame")
     HueSlider.Position = UDim2_new(0, 10, 0, 175)
     HueSlider.Size = UDim2_new(0, 220, 0, 20)
-    Instance_new("UICorner", HueSlider).CornerRadius = UDim.new(0, 4)
-    local HueG = Instance_new("UIGradient", HueSlider)
+    HueSlider.ZIndex = 999992
+    local HSC = Instance_new("UICorner")
+    HSC.CornerRadius = UDim.new(0, 4)
+    HSC.Parent = HueSlider
+    local HueG = Instance_new("UIGradient")
     HueG.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0.00, Color3_fromRGB(255, 0, 0)),
         ColorSequenceKeypoint.new(0.16, Color3_fromRGB(255, 255, 0)),
@@ -260,30 +292,41 @@ function library.new(library, name, theme)
         ColorSequenceKeypoint.new(0.83, Color3_fromRGB(255, 0, 255)),
         ColorSequenceKeypoint.new(1.00, Color3_fromRGB(255, 0, 0))
     })
+    HueG.Parent = HueSlider
+    HueSlider.Parent = ColorPickerPopup
 
-    local HuePointer = Instance_new("Frame", HueSlider)
+    local HuePointer = Instance_new("Frame")
     HuePointer.Size = UDim2_new(0, 4, 1, 4)
     HuePointer.Position = UDim2_new(0, 0, 0.5, 0)
     HuePointer.AnchorPoint = Vector2.new(0.5, 0.5)
     HuePointer.BackgroundColor3 = zyColor
-    HuePointer.ZIndex = 11
-    Instance_new("UICorner", HuePointer).CornerRadius = UDim.new(0, 2)
+    HuePointer.ZIndex = 999993
+    local HPC = Instance_new("UICorner")
+    HPC.CornerRadius = UDim.new(0, 2)
+    HPC.Parent = HuePointer
+    HuePointer.Parent = HueSlider
 
-    local CP_Btns = Instance_new("Frame", ColorPickerPopup)
+    local CP_Btns = Instance_new("Frame")
     CP_Btns.Position = UDim2_new(0, 10, 0, 205)
     CP_Btns.Size = UDim2_new(0, 220, 0, 35)
     CP_Btns.BackgroundTransparency = 1
+    CP_Btns.ZIndex = 999992
+    CP_Btns.Parent = ColorPickerPopup
 
-    local ConfirmBtn = Instance_new("TextButton", CP_Btns)
+    local ConfirmBtn = Instance_new("TextButton")
     ConfirmBtn.Size = UDim2_new(0.5, -5, 1, 0)
     ConfirmBtn.BackgroundColor3 = beijingColor
     ConfirmBtn.Font = Enum.Font.GothamSemibold
     ConfirmBtn.Text = "确定 / OK"
     ConfirmBtn.TextColor3 = zyColor
     ConfirmBtn.TextSize = 12
-    Instance_new("UICorner", ConfirmBtn).CornerRadius = UDim.new(0, 6)
+    ConfirmBtn.ZIndex = 999993
+    local CBC1 = Instance_new("UICorner")
+    CBC1.CornerRadius = UDim.new(0, 6)
+    CBC1.Parent = ConfirmBtn
+    ConfirmBtn.Parent = CP_Btns
 
-    local CancelBtn = Instance_new("TextButton", CP_Btns)
+    local CancelBtn = Instance_new("TextButton")
     CancelBtn.Position = UDim2_new(0.5, 5, 0, 0)
     CancelBtn.Size = UDim2_new(0.5, -5, 1, 0)
     CancelBtn.BackgroundColor3 = Color3_fromRGB(45, 45, 45)
@@ -291,13 +334,20 @@ function library.new(library, name, theme)
     CancelBtn.Text = "取消 / Cancel"
     CancelBtn.TextColor3 = Color3_fromRGB(255, 100, 100)
     CancelBtn.TextSize = 12
-    Instance_new("UICorner", CancelBtn).CornerRadius = UDim.new(0, 6)
+    CancelBtn.ZIndex = 999993
+    local CBC2 = Instance_new("UICorner")
+    CBC2.CornerRadius = UDim.new(0, 6)
+    CBC2.Parent = CancelBtn
+    CancelBtn.Parent = CP_Btns
+
 
     local function updateCP()
         SVMap.BackgroundColor3 = Color3_fromHSV(CurrentCP_H, 1, 1)
         SVPointer.Position = UDim2_new(CurrentCP_S, 0, 1 - CurrentCP_V, 0)
         HuePointer.Position = UDim2_new(CurrentCP_H, 0, 0.5, 0)
     end
+
+
 
     local draggingSV = false
     SVMap.InputBegan:Connect(function(input)
