@@ -152,7 +152,7 @@ function Forums.new(Themes, close_callback)
 	local triangle = Instance.new("ImageLabel")
 	local close = Instance.new("ImageButton")
 	local containerHolder = Instance.new("Frame")
-	local pages = Instance.new("Folder")
+	local pages = Instance.new("Frame")
 	local newPage = Instance.new("ScrollingFrame")
 	local sectionList = Instance.new("UIListLayout")
 	local UIListLayout = Instance.new("UIListLayout")
@@ -299,6 +299,8 @@ containerHolder.Position = UDim2.new(0, 0, 0, 36)
 	local sidebar = Instance.new("Frame")
 	pages.Name = "pages"
 	pages.Parent = containerHolder
+	pages.BackgroundTransparency = 1
+	pages.BorderSizePixel = 0
 	pages.Position = UDim2.new(0, 160, 0, 0)
 	pages.Size = UDim2.new(1, -160, 1, 0)
 
