@@ -17,7 +17,7 @@ host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 5,
+firstConnectDepth = 3,
 updateTreeDepth   = 3,
 expandedTreeDepth = 2,
 gameTreeServices  = {
@@ -258,28 +258,28 @@ end
 
 local sanitizeForJson
 sanitizeForJson = function(v, depth)
-    depth = depth or 0
-    if depth > 50 then return nil end
-    local t = type(v)
-    if t == 'string' then
-        return v:gsub('%z', '')
-    elseif t == 'number' then
-        if v ~= v or v == math.huge or v == -math.huge then return 0 end
-        return v
-    elseif t == 'boolean' then
-        return v
-    elseif t == 'table' then
-        local clean = {}
-        for k, val in pairs(v) do
-            if type(k) == 'number' then
-                clean[k] = sanitizeForJson(val, depth + 1)
-            elseif type(k) == 'string' then
-                clean[k:gsub('%z', '')] = sanitizeForJson(val, depth + 1)
-            end
-        end
-        return clean
-    end
-    return nil
+depth = depth or 0
+if depth > 50 then return nil end
+local t = type(v)
+if t == 'string' then
+	return v:gsub('%z', '')
+elseif t == 'number' then
+	if v ~= v or v == math.huge or v == -math.huge then return 0 end
+	return v
+elseif t == 'boolean' then
+	return v
+elseif t == 'table' then
+	local clean = {}
+	for k, val in pairs(v) do
+		if type(k) == 'number' then
+			clean[k] = sanitizeForJson(val, depth + 1)
+		elseif type(k) == 'string' then
+			clean[k:gsub('%z', '')] = sanitizeForJson(val, depth + 1)
+		end
+	end
+	return clean
+end
+return nil
 end
 
 local jsonEncode = function(data)
@@ -686,28 +686,26 @@ end
 
 --  Game tree (totally not skidded from Dex)
 
-local serializeInstance
-serializeInstance = function(instance, depth)
-if depth <= 0 then return nil end
-
-local node = { name = instance.Name, className = instance.ClassName }
-local children = instance:GetChildren()
-
-if depth == 1 and #children > 0 then
-	node.hasChildren = true
-	return node
-end
-
-if #children > 0 then
-	local serialized = {}
-	for _, child in ipairs(children) do
-		local childNode = serializeInstance(child, depth - 1)
-		if childNode ~= nil then table.insert(serialized, childNode) end
-	end
-	if #serialized > 0 then node.children = serialized end
-end
-
-return node
+local function serializeInstance(instance: Instance, depth: number): table?
+    if depth <= 0 then return nil end
+    local ok, name = pcall(function() return instance.Name end)
+    local ok2, className = pcall(function() return instance.ClassName end)
+    if not (ok and ok2) then return nil end
+    local node = { name = name, className = className }
+    local children = instance:GetChildren()
+    if depth == 1 and #children > 0 then
+        node.hasChildren = true
+        return node
+    end
+    if #children > 0 then
+        local serialized = {}
+        for _, child in ipairs(children) do
+            local childNode = serializeInstance(child, depth - 1)
+            if childNode then table.insert(serialized, childNode) end
+        end
+        if #serialized > 0 then node.children = serialized end
+    end
+    return node
 end
 
 local getChildrenAtPath = function(path, depth)
@@ -722,32 +720,29 @@ end
 return result
 end
 
-local getGameTree = function(services, depth)
-local tree = {}
-local treeDepth = depth or CONFIG.updateTreeDepth
-local added = {}
-
-for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
-	local ok, service = pcall(game.GetService, game, serviceName)
-	if ok and service ~= nil then
-		local serviceNode = serializeInstance(service, treeDepth)
-		if serviceNode ~= nil then
-			table.insert(tree, serviceNode)
-			added[service] = true
-		end
-	end
-end
-
-if services == nil then
-	for _, child in ipairs(game:GetChildren()) do
-		if added[child] == nil then
-			local ok, serviceNode = pcall(serializeInstance, child, treeDepth)
-			if ok and serviceNode ~= nil then table.insert(tree, serviceNode) end
-		end
-	end
-end
-
-return tree
+local function getGameTree(services: {string}?, depth: number?): table
+    local tree = {}
+    local treeDepth = depth or CONFIG.updateTreeDepth
+    local added = {}
+    for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
+        local ok, service = pcall(game.GetService, game, serviceName)
+        if ok and service then
+            local okS, node = pcall(serializeInstance, service, treeDepth)
+            if okS and node then
+                table.insert(tree, node)
+                added[service] = true
+            end
+        end
+    end
+    if not services then
+        for _, child in ipairs(game:GetChildren()) do
+            if not added[child] then
+                local ok, node = pcall(serializeInstance, child, treeDepth)
+                if ok and node then table.insert(tree, node) end
+            end
+        end
+    end
+    return tree
 end
 
 -- Game tree updates are sent only on connect and when explicitly requested by VS Code.
