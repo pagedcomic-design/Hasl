@@ -7,6 +7,9 @@ repeat
 	task.wait()
 until game:IsLoaded()
 
+local cloneref = cloneref or function(o) return o end
+local gethui = gethui or function() return game:GetService("CoreGui") end
+
 local Forums = {}
 local Theme = {
 RedTheme = {
@@ -52,10 +55,10 @@ SeperatorColor = Color3.fromRGB(95, 95, 95)
 }
 local minimized = false;
 
-local tween = game:GetService("TweenService")
+local tween = cloneref(game:GetService("TweenService"))
 local tweeninfo = TweenInfo.new
-local input = game:GetService("UserInputService")
-local run = game:GetService("RunService")
+local input = cloneref(game:GetService("UserInputService"))
+local run = cloneref(game:GetService("RunService"))
 
 function Forums:DraggingEnabled(frame, parent)
 	parent = parent or frame
@@ -97,23 +100,23 @@ end
 
 function UIMinimize()
 	if minimized then
-		game.TweenService:Create(game.CoreGui[getgenv().libName].shadow.Main,
+		game.TweenService:Create(gethui()[getgenv().libName].shadow.Main,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 		Size = UDim2.new(0, 486, 0, 283)
 		}):Play()
 		task.wait()
-		game.TweenService:Create(game.CoreGui[getgenv().libName].shadow,
+		game.TweenService:Create(gethui()[getgenv().libName].shadow,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 		ImageTransparency = 0
 		}):Play()
 		minimized = false
 	else
-		game.TweenService:Create(game.CoreGui[getgenv().libName].shadow,
+		game.TweenService:Create(gethui()[getgenv().libName].shadow,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 		ImageTransparency = 1.000
 		}):Play()
 		task.wait()
-		game.TweenService:Create(game.CoreGui[getgenv().libName].shadow.Main,
+		game.TweenService:Create(gethui()[getgenv().libName].shadow.Main,
 		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 		Size = UDim2.new(0, 0, 0, 0)
 		}):Play()
@@ -130,7 +133,7 @@ function Forums.new(Themes, close_callback)
 	elseif Themes == "DarkTheme" then
 		Themes = Theme.DarkTheme
 	end
-	for i, v in pairs(game.CoreGui:GetChildren()) do
+	for i, v in pairs(gethui():GetChildren()) do
 		if v.Name == 'Hasl' then
 			v:Destroy()
 		end
@@ -162,7 +165,7 @@ function Forums.new(Themes, close_callback)
 	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 	_81asf91z9asf1.Name = 'Hasl'
-	_81asf91z9asf1.Parent = game.CoreGui
+	_81asf91z9asf1.Parent = gethui()
 	_81asf91z9asf1.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	_81asf91z9asf1.Changed:Connect(function(property)
@@ -323,22 +326,11 @@ pages.Parent = containerHolder
 	sidebar.Size = UDim2.new(0, 0, 1, 0)
 	sidebar.ZIndex = 20
 
-	local sidebarTriangle = Instance.new("ImageLabel")
-	sidebarTriangle.Name = "sidebarTriangle"
-	sidebarTriangle.Parent = sidebar
-	sidebarTriangle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	sidebarTriangle.BackgroundTransparency = 1.000
-	sidebarTriangle.Position = UDim2.new(0, 0, 0, 0)
-	sidebarTriangle.Size = UDim2.new(1, 0, 1, 0)
-	sidebarTriangle.Image = "http://www.roblox.com/asset/?id=6676220228"
-	sidebarTriangle.ImageColor3 = Themes.MainHeaderColorImage
-	sidebarTriangle.ZIndex = 20
-
 	local sidebarPadding = Instance.new("UIPadding")
 	sidebarPadding.Parent = sidebar
-	sidebarPadding.PaddingLeft = UDim.new(0, 10)
-	sidebarPadding.PaddingRight = UDim.new(0, 10)
-	sidebarPadding.PaddingTop = UDim.new(0, 10)
+	sidebarPadding.PaddingLeft = UDim.new(0, 5)
+	sidebarPadding.PaddingRight = UDim.new(0, 5)
+	sidebarPadding.PaddingTop = UDim.new(0, 8)
 
 	local sidebarList = Instance.new("UIListLayout")
 	sidebarList.Parent = sidebar
@@ -1525,7 +1517,7 @@ for i, v in next, list do
 	local btn = dropOption
 	local sample = Sample_2
 	btn.MouseButton1Click:Connect(function()
-	dropInf.Text = v
+	dropInf.Text = title .. ": " .. v
 	callback(v)
 	game.TweenService:Create(dropFrame,
 	TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
@@ -1789,9 +1781,9 @@ function fElements:NewColorPicker(cTitle, defaultColor, callback)
 	uiCorner.Parent = colorBox
 	uiCorner.CornerRadius = UDim.new(0, 4)
 
-	local screenGui = game.CoreGui:FindFirstChild(getgenv().libName)
+	local screenGui = gethui():FindFirstChild(getgenv().libName)
 	if not screenGui then
-		for _, v in pairs(game.CoreGui:GetChildren()) do
+		for _, v in pairs(gethui():GetChildren()) do
 			if v.Name == "Hasl" then screenGui = v break end
 		end
 	end
@@ -3057,7 +3049,7 @@ Sample_2.ImageColor3 = Themes.SampleColor
 Sample_2.ImageTransparency = 0.600
 
 dropOption.MouseButton1Click:Connect(function()
-dropInf.Text = v
+dropInf.Text = dTitle .. ": " .. v
 callback(v)
 game.TweenService:Create(dropFrame, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Size = UDim2.new(0, 474, 0, 32) }):Play()
 game.TweenService:Create(expand_more, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Rotation = 0 }):Play()
@@ -3192,9 +3184,9 @@ function fElements:NewColorPicker(cTitle, defaultColor, callback)
 	uiCorner.Parent = colorBox
 	uiCorner.CornerRadius = UDim.new(0, 4)
 
-	local screenGui = game.CoreGui:FindFirstChild(getgenv().libName)
+	local screenGui = gethui():FindFirstChild(getgenv().libName)
 	if not screenGui then
-		for _, v in pairs(game.CoreGui:GetChildren()) do
+		for _, v in pairs(gethui():GetChildren()) do
 			if v.Name == "Hasl" then screenGui = v break end
 		end
 	end
