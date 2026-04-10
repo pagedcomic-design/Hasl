@@ -256,8 +256,35 @@ end
 
 --  Networking
 
+local sanitizeForJson
+sanitizeForJson = function(v, depth)
+    depth = depth or 0
+    if depth > 50 then return nil end
+    local t = type(v)
+    if t == 'string' then
+        return v:gsub('%z', '')
+    elseif t == 'number' then
+        if v ~= v or v == math.huge or v == -math.huge then return 0 end
+        return v
+    elseif t == 'boolean' then
+        return v
+    elseif t == 'table' then
+        local clean = {}
+        for k, val in pairs(v) do
+            if type(k) == 'number' then
+                clean[k] = sanitizeForJson(val, depth + 1)
+            elseif type(k) == 'string' then
+                clean[k:gsub('%z', '')] = sanitizeForJson(val, depth + 1)
+            end
+        end
+        return clean
+    end
+    return nil
+end
+
 local jsonEncode = function(data)
-local ok, result = pcall(HttpService.JSONEncode, HttpService, data)
+local safe = sanitizeForJson(data)
+local ok, result = pcall(HttpService.JSONEncode, HttpService, safe)
 if not ok then
 	warn('[rbxdev-bridge] JSONEncode failed: ' .. tostring(result))
 	return nil
