@@ -1,5 +1,6 @@
 local HttpService = game:GetService'HttpService'
 local Players = game:GetService'Players'
+local LogService = game:GetService'LogService'
 
 local BRIDGE_ID = tostring(math.random(1, 999999999))
 
@@ -17,13 +18,12 @@ host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 2,
-updateTreeDepth   = 3,
-expandedTreeDepth = 2,
+firstConnectDepth = 1, -- 降低初始深度，防止首次连接包过大
+updateTreeDepth   = 2, -- 降低更新深度
+expandedTreeDepth = 1, -- 降低展开深度
 gameTreeServices  = {
 'Workspace', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
 'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting',
-'SoundService', 'Chat', 'Teams',
 },
 }
 
@@ -262,11 +262,14 @@ sanitizeForJson = function(v, depth)
     if depth > 50 then return nil end
     local t = type(v)
     if t == 'string' then
-        -- Filter control characters except \n, \t, \r
-        return v:gsub("[%c]", function(c)
+        -- 移除不可见的控制字符和非法 UTF-8 序列
+        -- 仅保留基础打印字符和换行
+        local clean = v:gsub("[%c]", function(c)
             if c == "\n" or c == "\t" or c == "\r" then return c end
             return ""
-        end):gsub('%z', '')
+        end)
+        -- 移除所有非 ASCII 字符以确保 JSON 解析 100% 成功
+        return clean:gsub("[^\32-\126\n\t\r]", "")
     elseif t == 'number' then
         if v ~= v or v == math.huge or v == -math.huge then return 0 end
         return v
@@ -274,23 +277,23 @@ sanitizeForJson = function(v, depth)
         return v
     elseif t == 'table' then
         local clean = {}
-        local isArray = #v > 0
+        local isArray = #v > 0 and (function()
+            local count = 0
+            for _ in pairs(v) do count = count + 1 end
+            return count == #v
+        end)()
+        
         if isArray then
             for i = 1, #v do
                 local val = sanitizeForJson(v[i], depth + 1)
-                if val ~= nil then
-                    table.insert(clean, val)
-                end
+                if val ~= nil then table.insert(clean, val) end
             end
         else
             for k, val in pairs(v) do
                 local cleanVal = sanitizeForJson(val, depth + 1)
                 if cleanVal ~= nil then
-                    if type(k) == 'string' then
-                        clean[k:gsub('%z', '')] = cleanVal
-                    elseif type(k) == 'number' then
-                        clean[tostring(k)] = cleanVal
-                    end
+                    local cleanKey = type(k) == 'string' and k:gsub("[^%w_]", "") or tostring(k)
+                    clean[cleanKey] = cleanVal
                 end
             end
         end
@@ -363,10 +366,21 @@ local send = function(data)
     if connection == nil or not connected then return end
     local encoded = jsonEncode(data)
     if encoded == nil then return end
+    
+    -- 强制限制单包大小，防止 WebSocket 截断导致解析错误
+    if #encoded > 1000000 then -- 1MB Limit
+        warn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
+        return
+    end
+    
     if #encoded > 50000 then
         print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
     end
-    connection:Send(encoded)
+    
+    local ok, err = pcall(function() connection:Send(encoded) end)
+    if not ok then
+        warn("[rbxdev-bridge] Send failed: " .. tostring(err))
+    end
 end
 
 local sendResult = function(messageType, id, success, payload)
@@ -711,15 +725,28 @@ local function serializeInstance(instance: Instance, depth: number): table?
     local ok, name = pcall(function() return instance.Name end)
     local ok2, className = pcall(function() return instance.ClassName end)
     if not (ok and ok2) then return nil end
+    
+    -- 更稳健的字符串清洗，防止 JSONEncode 崩溃
     local function cleanString(s: string): string
-        return s:gsub("[%c]", ""):gsub("%z", "")
+        local success, result = pcall(function()
+            return s:gsub("[%c%z]", ""):gsub("[^\32-\126]", "") -- 仅保留可打印 ASCII 字符作为安全项
+        end)
+        return success and result or "UnnamedInstance"
     end
+    
     local node = { name = cleanString(name), className = cleanString(className) }
-    local children = instance:GetChildren()
+    
+    -- 增加 pcall 避免对受限对象调用 GetChildren 时报错
+    local ok3, children = pcall(instance.GetChildren, instance)
+    if not ok3 or not children then 
+        return node 
+    end
+    
     if depth == 1 and #children > 0 then
         node.hasChildren = true
         return node
     end
+    
     if #children > 0 then
         local serialized = {}
         for _, child in ipairs(children) do
@@ -747,6 +774,8 @@ local function getGameTree(services: {string}?, depth: number?): table
     local tree = {}
     local treeDepth = depth or CONFIG.updateTreeDepth
     local added = {}
+    print("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
+    
     for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
         local ok, service = pcall(game.GetService, game, serviceName)
         if ok and service then
@@ -757,14 +786,8 @@ local function getGameTree(services: {string}?, depth: number?): table
             end
         end
     end
-    if not services then
-        for _, child in ipairs(game:GetChildren()) do
-            if not added[child] then
-                local ok, node = pcall(serializeInstance, child, treeDepth)
-                if ok and node then table.insert(tree, node) end
-            end
-        end
-    end
+    
+    print("[rbxdev-bridge] Root services serialized:", #tree)
     return tree
 end
 
@@ -1176,67 +1199,30 @@ handler(message)
 end
 
 local setupLogHooks = function()
--- Prevent double-hooking on re-execution
-if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
+    -- Prevent double-hooking on re-execution
+    if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
 
-local inHook = false
+    LogService.MessageOut:Connect(function(message, messageType)
+        if not connected then return end
+        
+        local level = "info"
+        if messageType == Enum.MessageType.MessageError then
+            level = "error"
+        elseif messageType == Enum.MessageType.MessageWarning then
+            level = "warn"
+        elseif messageType == Enum.MessageType.MessageInfo then
+            level = "info"
+        end
 
-local safeLog = function(level, ...)
-if inHook or not connected then return end
-inHook = true
+        pcall(send, {
+            type = 'log',
+            level = level,
+            message = message,
+            timestamp = os.time(),
+        })
+    end)
 
-local args = { ... }
-local parts = {}
-for i = 1, select('#', ...) do parts[i] = tostring(args[i]) end
-
-pcall(send, {
-type = 'log',
-level = level,
-message = table.concat(parts, '\t'),
-timestamp = os.time(),
-})
-
-inHook = false
-end
-
-if hookfunction ~= nil then
-	local originalPrint = clonefunction(print)
-	local originalWarn = clonefunction(warn)
-	local originalError = clonefunction(error)
-
-	hookfunction(print, function(...)
-	safeLog('info', ...)
-	return originalPrint(...)
-end)
-
-hookfunction(warn, function(...)
-safeLog('warn', ...)
-return originalWarn(...)
-end)
-
-hookfunction(error, function(message, level)
-safeLog('error', message)
-return originalError(message, level)
-end)
-
-if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
-return
-end
-
-local originalPrint = print
-local originalWarn = warn
-
-getgenv().print = function(...)
-safeLog('info', ...)
-return originalPrint(...)
-end
-
-getgenv().warn = function(...)
-safeLog('warn', ...)
-return originalWarn(...)
-end
-
-if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
+    if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
 end
 
 
