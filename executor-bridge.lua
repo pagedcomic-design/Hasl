@@ -1,34 +1,28 @@
 local HttpService = game:GetService'HttpService'
 local Players = game:GetService'Players'
 local LogService = game:GetService'LogService'
-
 local BRIDGE_ID = tostring(math.random(1, 999999999))
-
 if getgenv and getgenv()._RBXDEV_BRIDGE then
 	local old = getgenv()._RBXDEV_BRIDGE
 	if old.connection then pcall(old.connection.Close, old.connection) end
 	for _, conn in ipairs(old.refreshConnections or {}) do pcall(conn.Disconnect, conn) end
 	old.alive = false
 end
-
 local userConfig = (...) or {}
-
 local CONFIG = {
 host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 1, -- 降低初始深度，防止首次连接包过大
-updateTreeDepth   = 2, -- 降低更新深度
-expandedTreeDepth = 1, -- 降低展开深度
+firstConnectDepth = 1, 
+updateTreeDepth   = 2, 
+expandedTreeDepth = 1, 
 gameTreeServices  = {
 'Workspace', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
 'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting',
 },
 }
-
 for k, v in pairs(userConfig) do CONFIG[k] = v end
-
 local DEFAULT_PROPERTIES = {
 BasePart              = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size' },
 Part                  = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size', 'Shape' },
@@ -127,7 +121,6 @@ Tool                  = { 'Name', 'Enabled', 'CanBeDropped', 'RequiresHandle', '
 Camera                = { 'Name', 'CameraType', 'FieldOfView', 'CFrame' },
 Team                  = { 'Name', 'TeamColor', 'AutoAssignable' },
 }
-
 local CLASS_PATTERNS = {
 { pattern = 'Value',      props = { 'Name', 'Value' } },
 { pattern = 'Part',       props = DEFAULT_PROPERTIES.BasePart },
@@ -143,7 +136,6 @@ local CLASS_PATTERNS = {
 { pattern = 'Emitter',    props = DEFAULT_PROPERTIES.ParticleEmitter },
 { pattern = 'Particle',   props = DEFAULT_PROPERTIES.ParticleEmitter },
 }
-
 local VALUE_SERIALIZERS = {
 string    = function(v) return v, 'string' end,
 number    = function(v) return tostring(v), 'number' end,
@@ -158,7 +150,6 @@ UDim      = function(v) return string.format('%.3f, %d', v.Scale, v.Offset), 'UD
 UDim2     = function(v) return string.format('{%.3f, %d}, {%.3f, %d}', v.X.Scale, v.X.Offset, v.Y.Scale, v.Y.Offset), 'UDim2' end,
 EnumItem  = function(v) return tostring(v), 'EnumItem' end,
 }
-
 local VALUE_PARSERS = {
 string  = function(v) return v end,
 number  = function(v) return tonumber(v) end,
@@ -194,35 +185,26 @@ if #parts ~= 2 then return nil end
 return Enum[parts[1]][parts[2]]
 end,
 }
-
---  Executor detection
-
 local WebSocket = WebSocket
 or (syn and syn.websocket)
 or (Fluxus and Fluxus.websocket)
 or (krnl and krnl.websocket)
 or (Xeno and Xeno.websocket)
 or websocket
-
 local HttpRequest = request
 or http_request
 or syn_request
 or (syn and syn.request)
 or (http and http.request)
-
 if WebSocket == nil then
 	warn'[rbxdev-bridge] No WebSocket implementation found!'
 	return
 end
-
 local executorName, executorVersion = (function()
 if identifyexecutor == nil then return 'Unknown', '1.0' end
 local name, version = identifyexecutor()
 return name or 'Unknown', version or '1.0'
 end)()
-
---  State
-
 local connection = nil
 local connected = false
 local refreshConnections = {}
@@ -230,46 +212,34 @@ local bridgeAlive = true
 local reconnectScheduled = false
 local reconnectAttemptDelay = CONFIG.reconnectDelay
 local healthProbeFailures = 0
-
 local remoteSpyEnabled = false
 local remoteSpyFilter = ''
 local remoteSpyBlockedNames = {}
 local remoteSpyBlockedPaths = {}
 local spyCleanup = nil
-
--- Register this bridge instance globally for cleanup on re-execution
 if getgenv then
 	getgenv()._RBXDEV_BRIDGE = {
 	id = BRIDGE_ID,
-	connection = nil, -- updated when connection is established
+	connection = nil, 
 	refreshConnections = refreshConnections,
 	alive = true,
 	}
 end
-
--- Check if this specific bridge instance is still the active one
 local isBridgeAlive = function()
 if getgenv == nil then return bridgeAlive end
 local bridge = getgenv()._RBXDEV_BRIDGE
 return bridge ~= nil and bridge.id == BRIDGE_ID and bridge.alive
 end
-
---  Networking
-
 local sanitizeForJson
 sanitizeForJson = function(v, depth)
     depth = depth or 0
     if depth > 50 then return nil end
     local t = type(v)
     if t == 'string' then
-        -- 移除不可见的控制字符和非法 UTF-8 序列
-        -- 仅保留基础打印字符和换行
-        local clean = v:gsub("[%c]", function(c)
+        return v:gsub("%z", ""):gsub("[%c]", function(c)
             if c == "\n" or c == "\t" or c == "\r" then return c end
             return ""
         end)
-        -- 移除所有非 ASCII 字符以确保 JSON 解析 100% 成功
-        return clean:gsub("[^\32-\126\n\t\r]", "")
     elseif t == 'number' then
         if v ~= v or v == math.huge or v == -math.huge then return 0 end
         return v
@@ -282,7 +252,6 @@ sanitizeForJson = function(v, depth)
             for _ in pairs(v) do count = count + 1 end
             return count == #v
         end)()
-        
         if isArray then
             for i = 1, #v do
                 local val = sanitizeForJson(v[i], depth + 1)
@@ -301,7 +270,6 @@ sanitizeForJson = function(v, depth)
     end
     return nil
 end
-
 local jsonEncode = function(data)
 local safe = sanitizeForJson(data)
 local ok, result = pcall(HttpService.JSONEncode, HttpService, safe)
@@ -311,34 +279,28 @@ if not ok then
 end
 return result
 end
-
 local jsonDecode = function(data)
 local success, result = pcall(HttpService.JSONDecode, HttpService, data)
 if not success then return nil end
 return result
 end
-
 local getHealthUrl = function()
 if type(CONFIG.healthUrl) == 'string' and CONFIG.healthUrl ~= '' then
 	return CONFIG.healthUrl
 end
-
 local base = CONFIG.host:gsub('^wss://', 'https://'):gsub('^ws://', 'http://')
 local origin = base:match'^(https?://[^/]+)'
 if origin == nil then return nil end
 return origin .. '/health'
 end
-
 local canAttemptConnect = function()
 if CONFIG.enableHealthProbe == false or HttpRequest == nil then
 	return true
 end
-
 local healthUrl = getHealthUrl()
 if healthUrl == nil then
 	return true
 end
-
 local ok, response = pcall(HttpRequest, {
 Url = healthUrl,
 Method = 'GET',
@@ -346,55 +308,42 @@ Headers = {
 ['Cache-Control'] = 'no-cache',
 },
 })
-
 if not ok or type(response) ~= 'table' then
 	healthProbeFailures = healthProbeFailures + 1
 	return healthProbeFailures % 3 == 0
 end
-
 local statusCode = response.StatusCode or response.Status or response.status_code
 if statusCode == 200 then
 	healthProbeFailures = 0
 	return true
 end
-
 healthProbeFailures = healthProbeFailures + 1
 return healthProbeFailures % 3 == 0
 end
-
 local send = function(data)
     if connection == nil or not connected then return end
     local encoded = jsonEncode(data)
     if encoded == nil then return end
-    
-    -- 强制限制单包大小，防止 WebSocket 截断导致解析错误
-    if #encoded > 1000000 then -- 1MB Limit
+    if #encoded > 1000000 then 
         warn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
         return
     end
-    
     if #encoded > 50000 then
         print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
     end
-    
     local ok, err = pcall(function() connection:Send(encoded) end)
     if not ok then
         warn("[rbxdev-bridge] Send failed: " .. tostring(err))
     end
 end
-
 local sendResult = function(messageType, id, success, payload)
 local result = { type = messageType, id = id, success = success }
 for k, v in pairs(payload or {}) do result[k] = v end
 send(result)
 end
-
---  Instance path helpers
-
 local resolveInstancePath = function(path)
 local instance = game
 for _, segment in ipairs(path) do
-	-- Check for index-based resolution: "name\0index" (for duplicate-named siblings)
 	local sep = segment:find("\0", 1, true)
 	if sep then
 		local name = segment:sub(1, sep - 1)
@@ -421,7 +370,6 @@ for _, segment in ipairs(path) do
 end
 return instance
 end
-
 local getInstancePath = function(instance)
 local path = {}
 local current = instance
@@ -431,22 +379,18 @@ while current ~= nil and current ~= game do
 end
 return path
 end
-
 local instanceToPath = function(instance)
 if instance == nil then return 'nil' end
 if instance == game then return 'game' end
-
 local parts = {}
 local current = instance
 while current ~= nil and current ~= game do
 	table.insert(parts, 1, current)
 	current = current.Parent
 end
-
 if current == nil then
-	return 'nil --[[' .. instance.Name .. ' (nil parent)]]'
+	return 'nil '
 end
-
 local out = ''
 for i, part in ipairs(parts) do
 	if i == 1 then
@@ -464,39 +408,28 @@ for i, part in ipairs(parts) do
 		out = out .. ':FindFirstChild("' .. part.Name:gsub('\\', '\\\\'):gsub('"', '\\"') .. '")'
 	end
 end
-
 return out
 end
-
---  Value serialization (totally not skidded from SimpleSpy)
-
 local valueToLua
 local tableToLua
-
 valueToLua = function(v, depth, seen)
 depth = depth or 0
 seen = seen or {}
-
 local t = typeof(v)
-
 if v == nil then return 'nil' end
 if t == 'boolean' then return tostring(v) end
-
 if t == 'number' then
 	if v ~= v then return '0/0' end
 	if v == math.huge then return 'math.huge' end
 	if v == -math.huge then return '-math.huge' end
 	return tostring(v)
 end
-
 if t == 'string' then
 	return '"' .. v:gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n'):gsub('\r', '\\r'):gsub('\t', '\\t'):gsub('\0', '\\0') .. '"'
 end
-
 if t == 'Instance' then return instanceToPath(v) end
 if t == 'Vector3'  then return string.format('Vector3.new(%s, %s, %s)', tostring(v.X), tostring(v.Y), tostring(v.Z)) end
 if t == 'Vector2'  then return string.format('Vector2.new(%s, %s)', tostring(v.X), tostring(v.Y)) end
-
 if t == 'CFrame' then
 	local c = { v:GetComponents() }
 	if c[4] == 1 and c[5] == 0 and c[6] == 0
@@ -508,19 +441,16 @@ if t == 'CFrame' then
 	for _, comp in ipairs(c) do table.insert(p, tostring(comp)) end
 	return 'CFrame.new(' .. table.concat(p, ', ') .. ')'
 end
-
 if t == 'Color3'     then return string.format('Color3.new(%s, %s, %s)', tostring(v.R), tostring(v.G), tostring(v.B)) end
 if t == 'BrickColor' then return 'BrickColor.new("' .. v.Name .. '")' end
 if t == 'UDim'       then return string.format('UDim.new(%s, %s)', tostring(v.Scale), tostring(v.Offset)) end
 if t == 'UDim2'      then return string.format('UDim2.new(%s, %s, %s, %s)', tostring(v.X.Scale), tostring(v.X.Offset), tostring(v.Y.Scale), tostring(v.Y.Offset)) end
 if t == 'Rect'       then return string.format('Rect.new(%s, %s, %s, %s)', tostring(v.Min.X), tostring(v.Min.Y), tostring(v.Max.X), tostring(v.Max.Y)) end
-
 if t == 'Ray' then
 	return string.format('Ray.new(Vector3.new(%s, %s, %s), Vector3.new(%s, %s, %s))',
 	tostring(v.Origin.X), tostring(v.Origin.Y), tostring(v.Origin.Z),
 	tostring(v.Direction.X), tostring(v.Direction.Y), tostring(v.Direction.Z))
 end
-
 if t == 'Region3' then
 	local cf, size = v.CFrame, v.Size
 	local min, max = cf.Position - size / 2, cf.Position + size / 2
@@ -528,7 +458,6 @@ if t == 'Region3' then
 	tostring(min.X), tostring(min.Y), tostring(min.Z),
 	tostring(max.X), tostring(max.Y), tostring(max.Z))
 end
-
 if t == 'NumberSequence' then
 	local kps = {}
 	for _, kp in ipairs(v.Keypoints) do
@@ -536,7 +465,6 @@ if t == 'NumberSequence' then
 	end
 	return 'NumberSequence.new({' .. table.concat(kps, ', ') .. '})'
 end
-
 if t == 'ColorSequence' then
 	local kps = {}
 	for _, kp in ipairs(v.Keypoints) do
@@ -544,34 +472,28 @@ if t == 'ColorSequence' then
 	end
 	return 'ColorSequence.new({' .. table.concat(kps, ', ') .. '})'
 end
-
 if t == 'NumberRange' then return string.format('NumberRange.new(%s, %s)', tostring(v.Min), tostring(v.Max)) end
 if t == 'EnumItem'    then return tostring(v) end
 if t == 'TweenInfo'   then return string.format('TweenInfo.new(%s, %s, %s, %s, %s, %s)', tostring(v.Time), tostring(v.EasingStyle), tostring(v.EasingDirection), tostring(v.RepeatCount), tostring(v.Reverses), tostring(v.DelayTime)) end
 if t == 'table'       then return tableToLua(v, depth, seen) end
 if t == 'function'    then return 'function() end' end
 if t == 'thread'      then return 'nil' end
-
 local ok, str = pcall(tostring, v)
-if ok then return 'nil --[[' .. t .. ': ' .. str .. ']]' end
-return 'nil --[[' .. t .. ']]'
+if ok then return 'nil ' end
+return 'nil '
 end
-
 tableToLua = function(t, depth, seen)
 depth = depth or 0
 seen = seen or {}
-
 if depth > 5 then return '{}' end
 if seen[t] then return '{}' end
 seen[t] = true
-
 local parts = {}
 local arrayLen = #t
 local isArray = arrayLen > 0
 local indent = string.rep('    ', depth + 1)
 local closingIndent = string.rep('    ', depth)
 local count = 0
-
 if isArray then
 	for i = 1, arrayLen do
 		count = count + 1
@@ -579,7 +501,6 @@ if isArray then
 		table.insert(parts, indent .. valueToLua(t[i], depth + 1, seen))
 	end
 end
-
 for k, v in pairs(t) do
 	if isArray and type(k) == 'number' and k >= 1 and k <= arrayLen and math.floor(k) == k then
 		continue
@@ -594,24 +515,17 @@ for k, v in pairs(t) do
 	end
 	table.insert(parts, indent .. keyStr .. ' = ' .. valueToLua(v, depth + 1, seen))
 end
-
 seen[t] = nil
-
 if #parts == 0 then return '{}' end
 return '{\n' .. table.concat(parts, ',\n') .. '\n' .. closingIndent .. '}'
 end
-
---  Remote spy helpers (totally not skidded from SimpleSpy)
-
 local generateRemoteCode = function(remote, method, ...)
 local args = { ... }
 local numArgs = select('#', ...)
 local remotePath = instanceToPath(remote)
-
 if numArgs == 0 then
 	return remotePath .. ':' .. method .. '()'
 end
-
 local argParts = {}
 local hasComplexArgs = false
 for i = 1, numArgs do
@@ -621,33 +535,26 @@ for i = 1, numArgs do
 	end
 	table.insert(argParts, valueToLua(args[i], hasComplexArgs and 1 or 0))
 end
-
 if not hasComplexArgs and numArgs <= 5 then
 	return remotePath .. ':' .. method .. '(' .. table.concat(argParts, ', ') .. ')'
 end
-
 local indented = {}
 for _, part in ipairs(argParts) do table.insert(indented, '    ' .. part) end
 return remotePath .. ':' .. method .. '(\n' .. table.concat(indented, ',\n') .. '\n)'
 end
-
 local serializeArguments = function(...)
 local args = { ... }
 local parts = {}
 for i = 1, select('#', ...) do table.insert(parts, valueToLua(args[i])) end
 return table.concat(parts, ', ')
 end
-
 local rebuildRemoteSpyBlockMaps = function(blocks)
 remoteSpyBlockedNames = {}
 remoteSpyBlockedPaths = {}
-
 if type(blocks) ~= 'table' then return end
-
 for _, entry in ipairs(blocks) do
 	if type(entry) ~= 'table' then continue end
 	if type(entry.type) ~= 'string' or type(entry.value) ~= 'string' then continue end
-
 	if entry.type == 'name' then
 		remoteSpyBlockedNames[entry.value] = true
 	elseif entry.type == 'path' then
@@ -655,7 +562,6 @@ for _, entry in ipairs(blocks) do
 	end
 end
 end
-
 local getRemoteBlockState = function(remote)
 if typeof(remote) ~= 'Instance' then
 	return false, '', {}
@@ -666,9 +572,6 @@ local remoteName = remote.Name
 local blocked = remoteSpyBlockedNames[remoteName] == true or remoteSpyBlockedPaths[remotePathString] == true
 return blocked, remoteName, remotePath
 end
-
---  Properties
-
 local getDefaultProperties = function(className)
 local props = DEFAULT_PROPERTIES[className]
 if props ~= nil then return props end
@@ -677,28 +580,23 @@ for _, entry in ipairs(CLASS_PATTERNS) do
 end
 return { 'Name', 'ClassName' }
 end
-
 local serializePropertyValue = function(name, value)
 if value == nil then return { name = name, value = 'nil', valueType = 'nil' } end
-
 local valueType = typeof(value)
 local serializer = VALUE_SERIALIZERS[valueType]
 if serializer == nil then
 	return { name = name, value = tostring(value), valueType = 'other' }
 end
-
 local serializedValue, typeName, className = serializer(value)
 local result = { name = name, value = serializedValue, valueType = typeName }
 if className ~= nil then result.className = className end
 return result
 end
-
 local parseValue = function(value, valueType)
 local parser = VALUE_PARSERS[valueType]
 if parser == nil then return value end
 return parser(value)
 end
-
 local parseError = function(errorString)
 local file, line, message = errorString:match'(%S+):(%d+): (.+)'
 return {
@@ -707,7 +605,6 @@ file = file,
 line = line and tonumber(line) or nil,
 }
 end
-
 local getInstanceProperties = function(instance, requestedProps)
 local props = {}
 local propsToGet = requestedProps or getDefaultProperties(instance.ClassName)
@@ -717,36 +614,29 @@ for _, propName in ipairs(propsToGet) do
 end
 return props
 end
-
---  Game tree (totally not skidded from Dex)
-
 local function serializeInstance(instance: Instance, depth: number): table?
     if depth <= 0 then return nil end
     local ok, name = pcall(function() return instance.Name end)
     local ok2, className = pcall(function() return instance.ClassName end)
     if not (ok and ok2) then return nil end
-    
-    -- 更稳健的字符串清洗，防止 JSONEncode 崩溃
     local function cleanString(s: string): string
         local success, result = pcall(function()
-            return s:gsub("[%c%z]", ""):gsub("[^\32-\126]", "") -- 仅保留可打印 ASCII 字符作为安全项
+            return s:gsub("%z", ""):gsub("[%c]", function(c)
+                if c == "\n" or c == "\t" or c == "\r" then return c end
+                return ""
+            end)
         end)
         return success and result or "UnnamedInstance"
     end
-    
     local node = { name = cleanString(name), className = cleanString(className) }
-    
-    -- 增加 pcall 避免对受限对象调用 GetChildren 时报错
     local ok3, children = pcall(instance.GetChildren, instance)
     if not ok3 or not children then 
         return node 
     end
-    
     if depth == 1 and #children > 0 then
         node.hasChildren = true
         return node
     end
-    
     if #children > 0 then
         local serialized = {}
         for _, child in ipairs(children) do
@@ -757,11 +647,9 @@ local function serializeInstance(instance: Instance, depth: number): table?
     end
     return node
 end
-
 local getChildrenAtPath = function(path, depth)
 local instance = resolveInstancePath(path)
 if instance == nil then return nil end
-
 local result = {}
 for _, child in ipairs(instance:GetChildren()) do
 	local childNode = serializeInstance(child, depth)
@@ -769,13 +657,11 @@ for _, child in ipairs(instance:GetChildren()) do
 end
 return result
 end
-
 local function getGameTree(services: {string}?, depth: number?): table
     local tree = {}
     local treeDepth = depth or CONFIG.updateTreeDepth
     local added = {}
     print("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
-    
     for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
         local ok, service = pcall(game.GetService, game, serviceName)
         if ok and service then
@@ -786,20 +672,11 @@ local function getGameTree(services: {string}?, depth: number?): table
             end
         end
     end
-    
     print("[rbxdev-bridge] Root services serialized:", #tree)
     return tree
 end
-
--- Game tree updates are sent only on connect and when explicitly requested by VS Code.
--- No automatic DescendantAdded/DescendantRemoving listeners — they fire too frequently
--- and flood VS Code with redundant tree dumps. Use the refresh button instead.
-
---  Teleport helper
-
 local getTargetPosition = function(instance)
 if instance:IsA'BasePart' then return instance.Position + Vector3.new(0, 5, 0) end
-
 if instance:IsA'Model' then
 	local primaryPart = instance.PrimaryPart
 	if primaryPart ~= nil then return primaryPart.Position + Vector3.new(0, 5, 0) end
@@ -807,24 +684,17 @@ if instance:IsA'Model' then
 	if part ~= nil then return part.Position + Vector3.new(0, 5, 0) end
 	error'Model has no parts to teleport to'
 end
-
 if instance:IsA'Attachment' then return instance.WorldPosition + Vector3.new(0, 5, 0) end
-
 error('Cannot teleport to ' .. instance.ClassName)
 end
-
---  Module reflection
-
 local reflectModuleInterface = function(module)
 local moduleType = type(module)
 local interface = { kind = moduleType }
-
 if moduleType == 'function' then
 	local info = debug.getinfo(module, 'u')
 	interface.functionArity = info and info.nparams or 0
 	return interface
 end
-
 if moduleType == 'table' then
 	local props = {}
 	for key, value in pairs(module) do
@@ -839,36 +709,27 @@ if moduleType == 'table' then
 	interface.properties = props
 	return interface
 end
-
 interface.kind = 'other'
 return interface
 end
-
---  Message handlers
-
 local MESSAGE_HANDLERS = {}
-
 MESSAGE_HANDLERS.execute = function(message)
 local fn, loadError = loadstring(message.code)
 if fn == nil then
 	sendResult('executeResult', message.id, false, { error = parseError(tostring(loadError)) })
 	return
 end
-
 local ok, result = pcall(fn)
 if not ok then
 	sendResult('executeResult', message.id, false, { error = parseError(tostring(result)) })
 	return
 end
-
 sendResult('executeResult', message.id, true, { result = result ~= nil and tostring(result) or nil })
 end
-
 MESSAGE_HANDLERS.requestGameTree = function(message)
 local depth = message.depth or CONFIG.updateTreeDepth
 send{ type = 'gameTree', data = getGameTree(message.services, depth) }
 end
-
 MESSAGE_HANDLERS.requestChildren = function(message)
 local children = getChildrenAtPath(message.path, message.depth or CONFIG.expandedTreeDepth)
 if children == nil then
@@ -877,7 +738,6 @@ if children == nil then
 end
 sendResult('childrenResult', message.id, true, { path = message.path, children = children })
 end
-
 MESSAGE_HANDLERS.requestProperties = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
@@ -886,11 +746,9 @@ if instance == nil then
 end
 sendResult('propertiesResult', message.id, true, { properties = getInstanceProperties(instance, message.properties) })
 end
-
 MESSAGE_HANDLERS.requestModuleInterface = function(message)
 local moduleRef = message.moduleRef
 local module = nil
-
 if moduleRef.kind == 'path' then
 	local instance = resolveInstancePath(moduleRef.path)
 	if instance == nil then
@@ -915,38 +773,31 @@ elseif moduleRef.kind == 'assetId' then
 	end
 	module = result
 end
-
 if module == nil then
 	sendResult('moduleInterface', message.id, false, { error = 'Failed to load module' })
 	return
 end
-
 sendResult('moduleInterface', message.id, true, { interface = reflectModuleInterface(module) })
 end
-
 MESSAGE_HANDLERS.setProperty = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
 	sendResult('setPropertyResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
 	return
 end
-
 local ok, err = pcall(function() instance[message.property] = parseValue(message.value, message.valueType) end)
 if not ok then
 	sendResult('setPropertyResult', message.id, false, { error = tostring(err) })
 	return
 end
-
 sendResult('setPropertyResult', message.id, true)
 end
-
 MESSAGE_HANDLERS.teleportTo = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
 	sendResult('teleportToResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
 	return
 end
-
 local ok, err = pcall(function()
 local player = Players.LocalPlayer
 if player == nil then error'No local player' end
@@ -956,130 +807,106 @@ local hrp = character:FindFirstChild'HumanoidRootPart'
 if hrp == nil then error'No HumanoidRootPart' end
 hrp.CFrame = CFrame.new(getTargetPosition(instance))
 end)
-
 if not ok then
 	sendResult('teleportToResult', message.id, false, { error = tostring(err) })
 	return
 end
-
 sendResult('teleportToResult', message.id, true)
 end
-
 MESSAGE_HANDLERS.deleteInstance = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
 	sendResult('deleteInstanceResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
 	return
 end
-
 local ok, err = pcall(instance.Destroy, instance)
 if not ok then
 	sendResult('deleteInstanceResult', message.id, false, { error = tostring(err) })
 	return
 end
-
 sendResult('deleteInstanceResult', message.id, true)
 end
-
 MESSAGE_HANDLERS.reparentInstance = function(message)
 local source = resolveInstancePath(message.sourcePath)
 if source == nil then
 	sendResult('reparentInstanceResult', message.id, false, { error = 'Source not found at: ' .. table.concat(message.sourcePath, '.') })
 	return
 end
-
 local target = resolveInstancePath(message.targetPath)
 if target == nil then
 	sendResult('reparentInstanceResult', message.id, false, { error = 'Target not found at: ' .. table.concat(message.targetPath, '.') })
 	return
 end
-
 local ok, err = pcall(function() source.Parent = target end)
 if not ok then
 	sendResult('reparentInstanceResult', message.id, false, { error = tostring(err) })
 	return
 end
-
 sendResult('reparentInstanceResult', message.id, true)
 end
-
 MESSAGE_HANDLERS.requestScriptSource = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
 	sendResult('scriptSourceResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
 	return
 end
-
 if not (instance:IsA'LocalScript' or instance:IsA'ModuleScript' or instance:IsA'Script') then
 	sendResult('scriptSourceResult', message.id, false, { error = instance.ClassName .. ' is not a script type' })
 	return
 end
-
 local decompilerFunc = decompile or decompilescript or getscriptsource or getsourcescript or get_script_source or nil
 if decompilerFunc == nil then
 	sendResult('scriptSourceResult', message.id, false, { error = 'No decompiler available in this executor' })
 	return
 end
-
 local ok, source = pcall(decompilerFunc, instance)
 if not ok then
 	sendResult('scriptSourceResult', message.id, false, { error = 'Decompilation failed: ' .. tostring(source) })
 	return
 end
-
 sendResult('scriptSourceResult', message.id, true, { source = source, scriptType = instance.ClassName })
 end
-
 MESSAGE_HANDLERS.createInstance = function(message)
 local parent = resolveInstancePath(message.parentPath)
 if parent == nil then
 	sendResult('createInstanceResult', message.id, false, { error = 'Parent not found at: ' .. table.concat(message.parentPath, '.') })
 	return
 end
-
 local ok, result = pcall(function()
 local inst = Instance.new(message.className)
 if message.name ~= nil then inst.Name = message.name end
 inst.Parent = parent
 return inst.Name
 end)
-
 if not ok then
 	sendResult('createInstanceResult', message.id, false, { error = tostring(result) })
 	return
 end
-
 sendResult('createInstanceResult', message.id, true, { instanceName = result })
 end
-
 MESSAGE_HANDLERS.cloneInstance = function(message)
 local instance = resolveInstancePath(message.path)
 if instance == nil then
 	sendResult('cloneInstanceResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
 	return
 end
-
 local ok, result = pcall(function()
 local clone = instance:Clone()
 if clone == nil then error('Instance cannot be cloned') end
 clone.Parent = instance.Parent
 return clone.Name
 end)
-
 if not ok then
 	sendResult('cloneInstanceResult', message.id, false, { error = tostring(result) })
 	return
 end
-
 sendResult('cloneInstanceResult', message.id, true, { cloneName = result })
 end
-
 MESSAGE_HANDLERS.setRemoteSpyEnabled = function(message)
 if oth == nil and hookmetamethod == nil then
 	sendResult('setRemoteSpyEnabledResult', message.id, false, { error = 'No hooking method available in this executor' })
 	return
 end
-
 local ok, err = pcall(function()
 if message.enabled and not remoteSpyEnabled then
 	local logRemoteCall = function(self, method, blocked, remoteName, remotePath, ...)
@@ -1087,12 +914,9 @@ if message.enabled and not remoteSpyEnabled then
 	pcall(function()
 	if not remoteSpyEnabled or not connected then return end
 	if typeof(self) ~= 'Instance' then return end
-
 	local className = self.ClassName
 	if className ~= 'RemoteEvent' and className ~= 'RemoteFunction' and className ~= 'UnreliableRemoteEvent' then return end
-
 	if blocked ~= true and remoteSpyFilter ~= '' and remoteName:lower():find(remoteSpyFilter:lower()) == nil then return end
-
 	send({
 	type = 'remoteSpy',
 	call = {
@@ -1108,7 +932,6 @@ if message.enabled and not remoteSpyEnabled then
 	})
 end)
 end
-
 if oth ~= nil and type(oth.hook) == 'function' then
 	local mt = getrawmetatable(game)
 	local ncFunc = rawget(mt, '__namecall')
@@ -1126,7 +949,6 @@ if oth ~= nil and type(oth.hook) == 'function' then
 	setnamecallmethod(method)
 	return oldNamecall(self, ...)
 end)
-
 spyCleanup = function()
 if type(oth.unhook) == 'function' then
 	oth.unhook(ncFunc)
@@ -1135,7 +957,6 @@ else
 end
 end
 print'[rbxdev-bridge] Remote spy enabled (oth)'
-
 else
 	local oldNamecall
 	oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
@@ -1151,15 +972,12 @@ else
 	setnamecallmethod(method)
 	return oldNamecall(self, ...)
 end))
-
 spyCleanup = function()
 hookmetamethod(game, '__namecall', oldNamecall)
 end
 print'[rbxdev-bridge] Remote spy enabled (hookmetamethod)'
 end
-
 remoteSpyEnabled = true
-
 elseif not message.enabled and remoteSpyEnabled then
 	if spyCleanup ~= nil then
 		pcall(spyCleanup)
@@ -1169,27 +987,20 @@ elseif not message.enabled and remoteSpyEnabled then
 	print'[rbxdev-bridge] Remote spy disabled'
 end
 end)
-
 if not ok then
 	sendResult('setRemoteSpyEnabledResult', message.id, false, { error = tostring(err) })
 	return
 end
-
 sendResult('setRemoteSpyEnabledResult', message.id, true, { enabled = remoteSpyEnabled })
 end
-
 MESSAGE_HANDLERS.setRemoteSpyFilter = function(message)
 remoteSpyFilter = message.filter or ''
 sendResult('setRemoteSpyFilterResult', message.id, true)
 end
-
 MESSAGE_HANDLERS.setRemoteSpyBlockList = function(message)
 rebuildRemoteSpyBlockMaps(message.blocks)
 sendResult('setRemoteSpyBlockListResult', message.id, true)
 end
-
---  Core
-
 local handleMessage = function(rawMessage)
 local message = jsonDecode(rawMessage)
 if message == nil then return end
@@ -1197,14 +1008,10 @@ local handler = MESSAGE_HANDLERS[message.type]
 if handler == nil then return end
 handler(message)
 end
-
 local setupLogHooks = function()
-    -- Prevent double-hooking on re-execution
     if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
-
     LogService.MessageOut:Connect(function(message, messageType)
         if not connected then return end
-        
         local level = "info"
         if messageType == Enum.MessageType.MessageError then
             level = "error"
@@ -1213,7 +1020,6 @@ local setupLogHooks = function()
         elseif messageType == Enum.MessageType.MessageInfo then
             level = "info"
         end
-
         pcall(send, {
             type = 'log',
             level = level,
@@ -1221,25 +1027,17 @@ local setupLogHooks = function()
             timestamp = os.time(),
         })
     end)
-
     if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
 end
-
-
 local connect
 local scheduleReconnect
-
 scheduleReconnect = function()
 if reconnectScheduled or connected or not isBridgeAlive() then return end
-
 reconnectScheduled = true
 local delay = math.max(0, reconnectAttemptDelay or CONFIG.reconnectDelay or 0)
-
 task.delay(delay, function()
 reconnectScheduled = false
-
 if connected or not isBridgeAlive() then return end
-
 local connectState = connect(false)
 if connectState == 'connected' then
 	reconnectAttemptDelay = CONFIG.reconnectDelay
@@ -1249,19 +1047,16 @@ if connectState == 'blocked' then
 	scheduleReconnect()
 	return
 end
-
 local nextDelay = reconnectAttemptDelay
 if nextDelay == nil or nextDelay <= 0 then
 	nextDelay = CONFIG.reconnectDelay
 elseif nextDelay < CONFIG.reconnectDelayMax then
 	nextDelay = math.min(nextDelay * 2, CONFIG.reconnectDelayMax)
 end
-
 reconnectAttemptDelay = nextDelay
 scheduleReconnect()
 end)
 end
-
 connect = function(scheduleOnFailure)
 if not isBridgeAlive() then return false end
 if scheduleOnFailure == nil then scheduleOnFailure = true end
@@ -1271,7 +1066,6 @@ if not canAttemptConnect() then
 	end
 	return 'blocked'
 end
-
 local ok, ws = pcall(WebSocket.connect, CONFIG.host)
 if not ok or ws == nil then
 	if scheduleOnFailure then
@@ -1279,30 +1073,23 @@ if not ok or ws == nil then
 	end
 	return 'failed'
 end
-
 connection = ws
 connected = true
 reconnectScheduled = false
 reconnectAttemptDelay = CONFIG.reconnectDelay
 healthProbeFailures = 0
-
 if getgenv and getgenv()._RBXDEV_BRIDGE then
 	getgenv()._RBXDEV_BRIDGE.connection = ws
 end
-
 send{ type = 'connected', executorName = executorName, version = executorVersion }
 send{ type = 'gameTree', data = getGameTree(nil, CONFIG.firstConnectDepth) }
-
 ws.OnMessage:Connect(handleMessage)
-
 ws.OnClose:Connect(function()
 connected = false
 connection = nil
 scheduleReconnect()
 end)
-
 return 'connected'
 end
-
 task.defer(connect)
 setupLogHooks()
