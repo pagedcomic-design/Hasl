@@ -1013,17 +1013,25 @@ local setupLogHooks = function()
     LogService.MessageOut:Connect(function(message, messageType)
         if not connected then return end
         local level = "info"
+        local prefix = "[INFO] "
+        local color = "\27[0m"
         if messageType == Enum.MessageType.MessageError then
             level = "error"
+            prefix = "[ERROR] "
+            color = "\27[31m"
         elseif messageType == Enum.MessageType.MessageWarning then
             level = "warn"
+            prefix = "[WARN] "
+            color = "\27[33m"
         elseif messageType == Enum.MessageType.MessageInfo then
             level = "info"
+            prefix = "[INFO] "
+            color = "\27[36m"
         end
         pcall(send, {
-            type = 'log',
+            type = "log",
             level = level,
-            message = message,
+            message = color .. prefix .. message .. "\27[0m",
             timestamp = os.time(),
         })
     end)
