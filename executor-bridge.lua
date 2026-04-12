@@ -1,22 +1,25 @@
-local HttpService = game:GetService'HttpService'
-local Players = game:GetService'Players'
-local LogService = game:GetService'LogService'
+local cloneref = cloneref or function(v) return v end
+local HttpService = cloneref(game:GetService'HttpService')
+local Players = cloneref(game:GetService'Players')
+local LogService = cloneref(game:GetService'LogService')
+local RunService = cloneref(game:GetService'RunService')
+local CoreGui = pcall(game.GetService, game, 'CoreGui') and cloneref(game:GetService'CoreGui') or nil
 local BRIDGE_ID = tostring(math.random(1, 999999999))
-if getgenv and getgenv()._RBXDEV_BRIDGE then
-	local old = getgenv()._RBXDEV_BRIDGE
+if getgenv and getgenv()._UWUPAWZ_BRIDGE then
+	local old = getgenv()._UWUPAWZ_BRIDGE
 	if old.connection then pcall(old.connection.Close, old.connection) end
 	for _, conn in ipairs(old.refreshConnections or {}) do pcall(conn.Disconnect, conn) end
 	old.alive = false
 end
 local userConfig = (...) or {}
 local CONFIG = {
-host              = 'ws://154.219.96.199:54232',
+host              = 'ws://127.0.0.1:21324',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
-firstConnectDepth = 1, 
-updateTreeDepth   = 2, 
-expandedTreeDepth = 1, 
+firstConnectDepth = 1,
+updateTreeDepth   = 2,
+expandedTreeDepth = 1,
 gameTreeServices  = {
 'Workspace', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
 'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting', 'CoreGui',
@@ -24,117 +27,95 @@ gameTreeServices  = {
 }
 for k, v in pairs(userConfig) do CONFIG[k] = v end
 local DEFAULT_PROPERTIES = {
-BasePart              = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size' },
-Part                  = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size', 'Shape' },
-MeshPart              = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size' },
-UnionOperation        = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size' },
-SpawnLocation         = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size', 'Enabled', 'TeamColor' },
-Model                 = { 'Name', 'PrimaryPart' },
-Folder                = { 'Name' },
-Configuration         = { 'Name' },
-Script                = { 'Name', 'Enabled' },
-LocalScript           = { 'Name', 'Enabled' },
-ModuleScript          = { 'Name' },
-IntValue              = { 'Name', 'Value' },
-NumberValue           = { 'Name', 'Value' },
-StringValue           = { 'Name', 'Value' },
-BoolValue             = { 'Name', 'Value' },
-ObjectValue           = { 'Name', 'Value' },
-Color3Value           = { 'Name', 'Value' },
-BrickColorValue       = { 'Name', 'Value' },
-Vector3Value          = { 'Name', 'Value' },
-CFrameValue           = { 'Name', 'Value' },
-RayValue              = { 'Name', 'Value' },
-IntConstrainedValue   = { 'Name', 'Value', 'MinValue', 'MaxValue' },
-DoubleConstrainedValue = { 'Name', 'Value', 'MinValue', 'MaxValue' },
-Sound                 = { 'Name', 'Volume', 'Playing', 'SoundId', 'TimePosition', 'Looped', 'PlaybackSpeed' },
-PointLight            = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Shadows' },
-SpotLight             = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows' },
-SurfaceLight          = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows' },
-Frame                 = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'AnchorPoint' },
-ScrollingFrame        = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'CanvasSize', 'ScrollingDirection' },
-ScreenGui             = { 'Name', 'Enabled', 'ResetOnSpawn', 'ZIndexBehavior' },
-BillboardGui          = { 'Name', 'Enabled', 'Size', 'StudsOffset', 'MaxDistance', 'AlwaysOnTop' },
-SurfaceGui            = { 'Name', 'Enabled', 'Face', 'PixelsPerStud', 'AlwaysOnTop' },
-ViewportFrame         = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'Ambient', 'LightColor' },
-TextLabel             = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextSize', 'Font', 'TextScaled', 'TextWrapped' },
-TextButton            = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextSize', 'Font', 'TextScaled', 'TextWrapped' },
-TextBox               = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextSize', 'Font', 'PlaceholderText', 'ClearTextOnFocus' },
-ImageLabel            = { 'Name', 'Visible', 'Image', 'ImageColor3', 'ImageTransparency', 'ScaleType' },
-ImageButton           = { 'Name', 'Visible', 'Image', 'ImageColor3', 'ImageTransparency', 'ScaleType' },
-UIListLayout          = { 'Name', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder', 'Padding' },
-UIGridLayout          = { 'Name', 'CellPadding', 'CellSize', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder' },
-UITableLayout         = { 'Name', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder' },
-UIPageLayout          = { 'Name', 'Animated', 'Circular', 'EasingDirection', 'EasingStyle', 'Padding', 'TweenTime' },
-UIAspectRatioConstraint = { 'Name', 'AspectRatio', 'AspectType', 'DominantAxis' },
-UISizeConstraint      = { 'Name', 'MaxSize', 'MinSize' },
-UITextSizeConstraint  = { 'Name', 'MaxTextSize', 'MinTextSize' },
-UICorner              = { 'Name', 'CornerRadius' },
-UIGradient            = { 'Name', 'Color', 'Enabled', 'Offset', 'Rotation', 'Transparency' },
-UIPadding             = { 'Name', 'PaddingTop', 'PaddingBottom', 'PaddingLeft', 'PaddingRight' },
-UIScale               = { 'Name', 'Scale' },
-UIStroke              = { 'Name', 'Color', 'Enabled', 'Thickness', 'Transparency', 'ApplyStrokeMode' },
-RemoteEvent           = { 'Name' },
-RemoteFunction        = { 'Name' },
-BindableEvent         = { 'Name' },
-BindableFunction      = { 'Name' },
-UnreliableRemoteEvent = { 'Name' },
-Humanoid              = { 'Name', 'Health', 'MaxHealth', 'WalkSpeed', 'JumpPower', 'JumpHeight', 'HipHeight', 'AutoRotate' },
-HumanoidDescription   = { 'Name', 'HeadColor', 'TorsoColor', 'LeftArmColor', 'RightArmColor', 'LeftLegColor', 'RightLegColor' },
-Animation             = { 'Name', 'AnimationId' },
-AnimationController   = { 'Name' },
-Animator              = { 'Name' },
-ParticleEmitter       = { 'Name', 'Enabled', 'Rate', 'Lifetime', 'Speed', 'Color', 'Size', 'Transparency' },
-Beam                  = { 'Name', 'Enabled', 'Color', 'Transparency', 'Width0', 'Width1', 'CurveSize0', 'CurveSize1' },
-Trail                 = { 'Name', 'Enabled', 'Color', 'Transparency', 'Lifetime', 'MinLength', 'WidthScale' },
-Fire                  = { 'Name', 'Enabled', 'Color', 'SecondaryColor', 'Heat', 'Size' },
-Smoke                 = { 'Name', 'Enabled', 'Color', 'Opacity', 'RiseVelocity', 'Size' },
-Sparkles              = { 'Name', 'Enabled', 'SparkleColor' },
-Highlight             = { 'Name', 'Enabled', 'FillColor', 'FillTransparency', 'OutlineColor', 'OutlineTransparency' },
-ForceField            = { 'Name', 'Visible' },
-Decal                 = { 'Name', 'Texture', 'Transparency', 'Color3', 'Face' },
-Texture               = { 'Name', 'Texture', 'Transparency', 'Color3', 'Face', 'StudsPerTileU', 'StudsPerTileV' },
-SurfaceAppearance     = { 'Name', 'ColorMap', 'NormalMap', 'MetalnessMap', 'RoughnessMap' },
-Attachment            = { 'Name', 'Position', 'Orientation', 'Visible' },
-Weld                  = { 'Name', 'Part0', 'Part1', 'C0', 'C1' },
-WeldConstraint        = { 'Name', 'Part0', 'Part1', 'Enabled' },
-Motor6D               = { 'Name', 'Part0', 'Part1', 'C0', 'C1', 'CurrentAngle', 'MaxVelocity' },
-RopeConstraint        = { 'Name', 'Visible', 'Length', 'Restitution', 'Thickness', 'Color' },
-RodConstraint         = { 'Name', 'Visible', 'Length', 'Thickness', 'Color' },
-SpringConstraint      = { 'Name', 'Visible', 'FreeLength', 'Stiffness', 'Damping', 'Coils', 'Thickness', 'Color' },
-HingeConstraint       = { 'Name', 'Visible', 'ActuatorType', 'AngularVelocity', 'MotorMaxTorque', 'TargetAngle', 'LimitsEnabled', 'LowerAngle', 'UpperAngle' },
-PrismaticConstraint   = { 'Name', 'Visible', 'ActuatorType', 'Velocity', 'MotorMaxForce', 'TargetPosition', 'LimitsEnabled', 'LowerLimit', 'UpperLimit' },
-AlignPosition         = { 'Name', 'Mode', 'MaxForce', 'MaxVelocity', 'Responsiveness', 'RigidityEnabled' },
-AlignOrientation      = { 'Name', 'Mode', 'MaxTorque', 'MaxAngularVelocity', 'Responsiveness', 'RigidityEnabled' },
-LinearVelocity        = { 'Name', 'VectorVelocity', 'MaxForce', 'RelativeTo' },
-AngularVelocity       = { 'Name', 'AngularVelocity', 'MaxTorque', 'RelativeTo' },
-VectorForce           = { 'Name', 'Force', 'RelativeTo' },
-Torque                = { 'Name', 'Torque', 'RelativeTo' },
-BodyForce             = { 'Name', 'Force' },
-BodyVelocity          = { 'Name', 'Velocity', 'MaxForce', 'P' },
-BodyPosition          = { 'Name', 'Position', 'MaxForce', 'P', 'D' },
-BodyGyro              = { 'Name', 'CFrame', 'MaxTorque', 'P', 'D' },
-ClickDetector         = { 'Name', 'MaxActivationDistance', 'CursorIcon' },
-ProximityPrompt       = { 'Name', 'Enabled', 'ActionText', 'ObjectText', 'KeyboardKeyCode', 'HoldDuration', 'MaxActivationDistance', 'RequiresLineOfSight' },
-DragDetector          = { 'Name', 'Enabled', 'DragStyle', 'ResponseStyle', 'MaxForce', 'MaxTorque', 'Responsiveness' },
-Tool                  = { 'Name', 'Enabled', 'CanBeDropped', 'RequiresHandle', 'ToolTip' },
-Camera                = { 'Name', 'CameraType', 'FieldOfView', 'CFrame' },
-Team                  = { 'Name', 'TeamColor', 'AutoAssignable' },
+    Instance              = { 'Name', 'Parent', 'Archivable', 'ClassName' },
+    BasePart              = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation', 'CollisionGroupId' },
+    Part                  = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation', 'Shape' },
+    MeshPart              = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation' },
+    UnionOperation        = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation' },
+    SpawnLocation         = { 'Name', 'Transparency', 'Color', 'Material', 'Anchored', 'CanCollide', 'Position', 'Size', 'Enabled', 'TeamColor', 'AllowTeamChangeOnTouch', 'Neutral' },
+    Model                 = { 'Name', 'PrimaryPart', 'LevelOfDetail' },
+    Folder                = { 'Name' },
+    Configuration         = { 'Name' },
+    Script                = { 'Name', 'Enabled', 'RunContext' },
+    LocalScript           = { 'Name', 'Enabled' },
+    ModuleScript          = { 'Name' },
+    IntValue              = { 'Name', 'Value' },
+    NumberValue           = { 'Name', 'Value' },
+    StringValue           = { 'Name', 'Value' },
+    BoolValue             = { 'Name', 'Value' },
+    ObjectValue           = { 'Name', 'Value' },
+    Color3Value           = { 'Name', 'Value' },
+    BrickColorValue       = { 'Name', 'Value' },
+    Vector3Value          = { 'Name', 'Value' },
+    CFrameValue           = { 'Name', 'Value' },
+    RayValue              = { 'Name', 'Value' },
+    IntConstrainedValue   = { 'Name', 'Value', 'MinValue', 'MaxValue' },
+    DoubleConstrainedValue = { 'Name', 'Value', 'MinValue', 'MaxValue' },
+    Sound                 = { 'Name', 'Volume', 'Playing', 'SoundId', 'TimePosition', 'Looped', 'PlaybackSpeed', 'RollOffMaxDistance', 'RollOffMinDistance', 'RollOffMode' },
+    PointLight            = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Shadows' },
+    SpotLight             = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows', 'Face' },
+    SurfaceLight          = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows', 'Face' },
+    Frame                 = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'BorderSizePixel', 'Position', 'Size', 'AnchorPoint', 'ZIndex', 'LayoutOrder' },
+    ScrollingFrame        = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'CanvasSize', 'ScrollingDirection', 'ScrollBarThickness' },
+    ScreenGui             = { 'Name', 'Enabled', 'ResetOnSpawn', 'ZIndexBehavior', 'DisplayOrder', 'IgnoreGuiInset' },
+    BillboardGui          = { 'Name', 'Enabled', 'Size', 'StudsOffset', 'MaxDistance', 'AlwaysOnTop', 'Adornee' },
+    SurfaceGui            = { 'Name', 'Enabled', 'Face', 'PixelsPerStud', 'AlwaysOnTop', 'Adornee' },
+    ViewportFrame         = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'Ambient', 'LightColor' },
+    TextLabel             = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'TextScaled', 'TextWrapped', 'TextXAlignment', 'TextYAlignment' },
+    TextButton            = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'TextScaled', 'TextWrapped' },
+    TextBox               = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'PlaceholderText', 'ClearTextOnFocus' },
+    ImageLabel            = { 'Name', 'Visible', 'Image', 'ImageColor3', 'ImageTransparency', 'ScaleType', 'TileSize' },
+    ImageButton           = { 'Name', 'Visible', 'Image', 'ImageColor3', 'ImageTransparency', 'ScaleType' },
+    UIListLayout          = { 'Name', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder', 'Padding' },
+    UIGridLayout          = { 'Name', 'CellPadding', 'CellSize', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder' },
+    UITableLayout         = { 'Name', 'FillDirection', 'HorizontalAlignment', 'VerticalAlignment', 'SortOrder' },
+    UIPageLayout          = { 'Name', 'Animated', 'Circular', 'EasingDirection', 'EasingStyle', 'Padding', 'TweenTime' },
+    UIAspectRatioConstraint = { 'Name', 'AspectRatio', 'AspectType', 'DominantAxis' },
+    UISizeConstraint      = { 'Name', 'MaxSize', 'MinSize' },
+    UITextSizeConstraint  = { 'Name', 'MaxTextSize', 'MinTextSize' },
+    UICorner              = { 'Name', 'CornerRadius' },
+    UIGradient            = { 'Name', 'Color', 'Enabled', 'Offset', 'Rotation', 'Transparency' },
+    UIPadding             = { 'Name', 'PaddingTop', 'PaddingBottom', 'PaddingLeft', 'PaddingRight' },
+    UIScale               = { 'Name', 'Scale' },
+    UIStroke              = { 'Name', 'Color', 'Enabled', 'Thickness', 'Transparency', 'ApplyStrokeMode', 'LineJoinMode' },
+    RemoteEvent           = { 'Name' },
+    RemoteFunction        = { 'Name' },
+    BindableEvent         = { 'Name' },
+    BindableFunction      = { 'Name' },
+    Humanoid              = { 'Name', 'Health', 'MaxHealth', 'WalkSpeed', 'JumpPower', 'JumpHeight', 'HipHeight', 'AutoRotate', 'UseJumpPower', 'DisplayName' },
+    HumanoidDescription   = { 'Name', 'HeadColor', 'TorsoColor', 'LeftArmColor', 'RightArmColor', 'LeftLegColor', 'RightLegColor' },
+    Animation             = { 'Name', 'AnimationId' },
+    ParticleEmitter       = { 'Name', 'Enabled', 'Rate', 'Lifetime', 'Speed', 'Color', 'Size', 'Transparency', 'Acceleration', 'Texture', 'SpreadAngle' },
+    Beam                  = { 'Name', 'Enabled', 'Color', 'Transparency', 'Width0', 'Width1', 'CurveSize0', 'CurveSize1', 'Texture', 'TextureMode', 'TextureSpeed' },
+    Trail                 = { 'Name', 'Enabled', 'Color', 'Transparency', 'Lifetime', 'MinLength', 'WidthScale', 'Texture', 'TextureMode' },
+    Fire                  = { 'Name', 'Enabled', 'Color', 'SecondaryColor', 'Heat', 'Size' },
+    Smoke                 = { 'Name', 'Enabled', 'Color', 'Opacity', 'RiseVelocity', 'Size' },
+    Sparkles              = { 'Name', 'Enabled', 'SparkleColor' },
+    Highlight             = { 'Name', 'Enabled', 'FillColor', 'FillTransparency', 'OutlineColor', 'OutlineTransparency', 'DepthMode', 'Adornee' },
+    Decal                 = { 'Name', 'Texture', 'Transparency', 'Color3', 'Face' },
+    Texture               = { 'Name', 'Texture', 'Transparency', 'Color3', 'Face', 'StudsPerTileU', 'StudsPerTileV' },
+    Attachment            = { 'Name', 'Position', 'Orientation', 'Visible', 'WorldPosition', 'WorldOrientation' },
+    Weld                  = { 'Name', 'Part0', 'Part1', 'C0', 'C1', 'Enabled' },
+    WeldConstraint        = { 'Name', 'Part0', 'Part1', 'Enabled' },
+    Motor6D               = { 'Name', 'Part0', 'Part1', 'C0', 'C1', 'CurrentAngle', 'MaxVelocity' },
+    ProximityPrompt       = { 'Name', 'Enabled', 'ActionText', 'ObjectText', 'KeyboardKeyCode', 'HoldDuration', 'MaxActivationDistance', 'RequiresLineOfSight' },
+    Tool                  = { 'Name', 'Enabled', 'CanBeDropped', 'RequiresHandle', 'ToolTip' },
+    Camera                = { 'Name', 'CameraType', 'FieldOfView', 'CFrame', 'Focus' },
 }
 local CLASS_PATTERNS = {
-{ pattern = 'Value',      props = { 'Name', 'Value' } },
-{ pattern = 'Part',       props = DEFAULT_PROPERTIES.BasePart },
-{ pattern = 'Union',      props = DEFAULT_PROPERTIES.BasePart },
-{ pattern = 'Mesh',       props = DEFAULT_PROPERTIES.BasePart },
-{ pattern = 'Gui',        props = DEFAULT_PROPERTIES.Frame },
-{ pattern = 'Frame',      props = DEFAULT_PROPERTIES.Frame },
-{ pattern = 'Text',       props = DEFAULT_PROPERTIES.TextLabel },
-{ pattern = 'Image',      props = DEFAULT_PROPERTIES.ImageLabel },
-{ pattern = 'Video',      props = DEFAULT_PROPERTIES.ImageLabel },
-{ pattern = 'Light',      props = DEFAULT_PROPERTIES.PointLight },
-{ pattern = 'Constraint', props = { 'Name', 'Enabled', 'Visible' } },
-{ pattern = 'Emitter',    props = DEFAULT_PROPERTIES.ParticleEmitter },
-{ pattern = 'Particle',   props = DEFAULT_PROPERTIES.ParticleEmitter },
+    { pattern = 'Value',      props = { 'Name', 'Value' } },
+    { pattern = 'Part',       props = DEFAULT_PROPERTIES.BasePart },
+    { pattern = 'Union',      props = DEFAULT_PROPERTIES.BasePart },
+    { pattern = 'Mesh',       props = DEFAULT_PROPERTIES.BasePart },
+    { pattern = 'Gui',        props = DEFAULT_PROPERTIES.Frame },
+    { pattern = 'Frame',      props = DEFAULT_PROPERTIES.Frame },
+    { pattern = 'Text',       props = DEFAULT_PROPERTIES.TextLabel },
+    { pattern = 'Image',      props = DEFAULT_PROPERTIES.ImageLabel },
+    { pattern = 'Video',      props = DEFAULT_PROPERTIES.ImageLabel },
+    { pattern = 'Light',      props = DEFAULT_PROPERTIES.PointLight },
+    { pattern = 'Constraint', props = { 'Name', 'Enabled', 'Visible' } },
+    { pattern = 'Emitter',    props = DEFAULT_PROPERTIES.ParticleEmitter },
+    { pattern = 'Particle',   props = DEFAULT_PROPERTIES.ParticleEmitter },
 }
 local VALUE_SERIALIZERS = {
 string    = function(v) return v, 'string' end,
@@ -217,58 +198,74 @@ local remoteSpyFilter = ''
 local remoteSpyBlockedNames = {}
 local remoteSpyBlockedPaths = {}
 local spyCleanup = nil
+local autoRefreshEnabled = false
+local autoRefreshIntervalSec = 5.0
+local autoRefreshDirty = false
+local autoRefreshLastFlush = 0
+local MIN_AUTO_REFRESH_INTERVAL_SEC = 2.0
+local MAX_COALESCE_SEC = 30.0
+
+-- Selection Highlight
+local SelectionHighlight = Instance.new("Highlight")
+SelectionHighlight.Name = "rbxdev_SelectionHighlight"
+SelectionHighlight.FillColor = Color3.fromRGB(0, 170, 255)
+SelectionHighlight.FillTransparency = 0.5
+SelectionHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+SelectionHighlight.OutlineTransparency = 0
+SelectionHighlight.Parent = (gethui and gethui()) or game:GetService("CoreGui") or workspace
+
 if getgenv then
-	getgenv()._RBXDEV_BRIDGE = {
+	getgenv()._UWUPAWZ_BRIDGE = {
 	id = BRIDGE_ID,
-	connection = nil, 
+	connection = nil,
 	refreshConnections = refreshConnections,
 	alive = true,
 	}
 end
 local isBridgeAlive = function()
 if getgenv == nil then return bridgeAlive end
-local bridge = getgenv()._RBXDEV_BRIDGE
+local bridge = getgenv()._UWUPAWZ_BRIDGE
 return bridge ~= nil and bridge.id == BRIDGE_ID and bridge.alive
 end
 local sanitizeForJson
 sanitizeForJson = function(v, depth)
-    depth = depth or 0
-    if depth > 50 then return nil end
-    local t = type(v)
-    if t == 'string' then
-        return v:gsub("%z", ""):gsub("[%c]", function(c)
-            if c == "\n" or c == "\t" or c == "\r" then return c end
-            return ""
-        end)
-    elseif t == 'number' then
-        if v ~= v or v == math.huge or v == -math.huge then return 0 end
-        return v
-    elseif t == 'boolean' then
-        return v
-    elseif t == 'table' then
-        local clean = {}
-        local isArray = #v > 0 and (function()
-            local count = 0
-            for _ in pairs(v) do count = count + 1 end
-            return count == #v
-        end)()
-        if isArray then
-            for i = 1, #v do
-                local val = sanitizeForJson(v[i], depth + 1)
-                if val ~= nil then table.insert(clean, val) end
-            end
-        else
-            for k, val in pairs(v) do
-                local cleanVal = sanitizeForJson(val, depth + 1)
-                if cleanVal ~= nil then
-                    local cleanKey = type(k) == 'string' and k:gsub("[^%w_]", "") or tostring(k)
-                    clean[cleanKey] = cleanVal
-                end
-            end
-        end
-        return clean
-    end
-    return nil
+depth = depth or 0
+if depth > 50 then return nil end
+local t = type(v)
+if t == 'string' then
+	return v:gsub("%z", ""):gsub("[%c]", function(c)
+	if c == "\n" or c == "\t" or c == "\r" then return c end
+	return ""
+end)
+elseif t == 'number' then
+	if v ~= v or v == math.huge or v == -math.huge then return 0 end
+	return v
+elseif t == 'boolean' then
+	return v
+elseif t == 'table' then
+	local clean = {}
+	local isArray = #v > 0 and (function()
+	local count = 0
+	for _ in pairs(v) do count = count + 1 end
+	return count == #v
+end)()
+if isArray then
+	for i = 1, #v do
+		local val = sanitizeForJson(v[i], depth + 1)
+		if val ~= nil then table.insert(clean, val) end
+	end
+else
+	for k, val in pairs(v) do
+		local cleanVal = sanitizeForJson(val, depth + 1)
+		if cleanVal ~= nil then
+			local cleanKey = type(k) == 'string' and k:gsub("[^%w_]", "") or tostring(k)
+			clean[cleanKey] = cleanVal
+		end
+	end
+end
+return clean
+end
+return nil
 end
 local jsonEncode = function(data)
 local safe = sanitizeForJson(data)
@@ -321,20 +318,20 @@ healthProbeFailures = healthProbeFailures + 1
 return healthProbeFailures % 3 == 0
 end
 local send = function(data)
-    if connection == nil or not connected then return end
-    local encoded = jsonEncode(data)
-    if encoded == nil then return end
-    if #encoded > 1000000 then 
-        warn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
-        return
-    end
-    if #encoded > 50000 then
-        print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
-    end
-    local ok, err = pcall(function() connection:Send(encoded) end)
-    if not ok then
-        warn("[rbxdev-bridge] Send failed: " .. tostring(err))
-    end
+if connection == nil or not connected then return end
+local encoded = jsonEncode(data)
+if encoded == nil then return end
+if #encoded > 1000000 then
+	warn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
+	return
+end
+if #encoded > 50000 then
+	print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
+end
+local ok, err = pcall(function() connection:Send(encoded) end)
+if not ok then
+	warn("[rbxdev-bridge] Send failed: " .. tostring(err))
+end
 end
 local sendResult = function(messageType, id, success, payload)
 local result = { type = messageType, id = id, success = success }
@@ -606,46 +603,58 @@ line = line and tonumber(line) or nil,
 }
 end
 local getInstanceProperties = function(instance, requestedProps)
-local props = {}
-local propsToGet = requestedProps or getDefaultProperties(instance.ClassName)
-for _, propName in ipairs(propsToGet) do
-	local ok, value = pcall(function() return instance[propName] end)
-	if ok then table.insert(props, serializePropertyValue(propName, value)) end
-end
-return props
+    local props = {}
+    local propsToGet = requestedProps or getDefaultProperties(instance.ClassName)
+
+    -- Basic properties
+    for _, propName in ipairs(propsToGet) do
+        local ok, value = pcall(function() return instance[propName] end)
+        if ok then table.insert(props, serializePropertyValue(propName, value)) end
+    end
+
+    -- Attributes
+    local ok, attributes = pcall(instance.GetAttributes, instance)
+    if ok and attributes then
+        for attrName, attrValue in pairs(attributes) do
+            local serialized = serializePropertyValue("[Attr] " .. attrName, attrValue)
+            table.insert(props, serialized)
+        end
+    end
+
+    return props
 end
 local function serializeInstance(instance: Instance, depth: number): table?
-    if depth <= 0 then return nil end
-    local ok, name = pcall(function() return instance.Name end)
-    local ok2, className = pcall(function() return instance.ClassName end)
-    if not (ok and ok2) then return nil end
-    local function cleanString(s: string): string
-        local success, result = pcall(function()
-            return s:gsub("%z", ""):gsub("[%c]", function(c)
-                if c == "\n" or c == "\t" or c == "\r" then return c end
-                return ""
-            end)
-        end)
-        return success and result or "UnnamedInstance"
-    end
-    local node = { name = cleanString(name), className = cleanString(className) }
-    local ok3, children = pcall(instance.GetChildren, instance)
-    if not ok3 or not children then 
-        return node 
-    end
-    if depth == 1 and #children > 0 then
-        node.hasChildren = true
-        return node
-    end
-    if #children > 0 then
-        local serialized = {}
-        for _, child in ipairs(children) do
-            local childNode = serializeInstance(child, depth - 1)
-            if childNode then table.insert(serialized, childNode) end
-        end
-        if #serialized > 0 then node.children = serialized end
-    end
-    return node
+if depth <= 0 then return nil end
+local ok, name = pcall(function() return instance.Name end)
+local ok2, className = pcall(function() return instance.ClassName end)
+if not (ok and ok2) then return nil end
+local function cleanString(s: string): string
+local success, result = pcall(function()
+return s:gsub("%z", ""):gsub("[%c]", function(c)
+if c == "\n" or c == "\t" or c == "\r" then return c end
+return ""
+end)
+end)
+return success and result or "UnnamedInstance"
+end
+local node = { name = cleanString(name), className = cleanString(className) }
+local ok3, children = pcall(instance.GetChildren, instance)
+if not ok3 or not children then
+	return node
+end
+if depth == 1 and #children > 0 then
+	node.hasChildren = true
+	return node
+end
+if #children > 0 then
+	local serialized = {}
+	for _, child in ipairs(children) do
+		local childNode = serializeInstance(child, depth - 1)
+		if childNode then table.insert(serialized, childNode) end
+	end
+	if #serialized > 0 then node.children = serialized end
+end
+return node
 end
 local getChildrenAtPath = function(path, depth)
 local instance = resolveInstancePath(path)
@@ -658,22 +667,22 @@ end
 return result
 end
 local function getGameTree(services: {string}?, depth: number?): table
-    local tree = {}
-    local treeDepth = depth or CONFIG.updateTreeDepth
-    local added = {}
-    print("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
-    for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
-        local ok, service = pcall(game.GetService, game, serviceName)
-        if ok and service then
-            local okS, node = pcall(serializeInstance, service, treeDepth)
-            if okS and node then
-                table.insert(tree, node)
-                added[service] = true
-            end
-        end
-    end
-    print("[rbxdev-bridge] Root services serialized:", #tree)
-    return tree
+local tree = {}
+local treeDepth = depth or CONFIG.updateTreeDepth
+local added = {}
+print("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
+for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
+	local ok, service = pcall(game.GetService, game, serviceName)
+	if ok and service then
+		local okS, node = pcall(serializeInstance, service, treeDepth)
+		if okS and node then
+			table.insert(tree, node)
+			added[service] = true
+		end
+	end
+end
+print("[rbxdev-bridge] Root services serialized:", #tree)
+return tree
 end
 local getTargetPosition = function(instance)
 if instance:IsA'Player' then
@@ -717,7 +726,114 @@ end
 interface.kind = 'other'
 return interface
 end
+local markAutoRefreshDirty = function()
+	autoRefreshDirty = true
+end
+local attachAutoRefreshListeners
+local detachAutoRefreshListeners
+attachAutoRefreshListeners = function(instance)
+	local addedConn = instance.DescendantAdded:Connect(markAutoRefreshDirty)
+	local removingConn = instance.DescendantRemoving:Connect(markAutoRefreshDirty)
+	table.insert(refreshConnections, addedConn)
+	table.insert(refreshConnections, removingConn)
+end
+detachAutoRefreshListeners = function()
+	for i = #refreshConnections, 1, -1 do
+		refreshConnections[i] = nil
+	end
+end
+local shutdownAutoRefresh = function()
+	autoRefreshEnabled = false
+	detachAutoRefreshListeners()
+end
+local autoRefreshHeartbeatTick = function()
+	if not autoRefreshEnabled or not connected or not autoRefreshDirty then return end
+	local now = os.clock()
+	local elapsed = now - autoRefreshLastFlush
+	if elapsed >= autoRefreshIntervalSec or elapsed >= MAX_COALESCE_SEC then
+		autoRefreshDirty = false
+		autoRefreshLastFlush = now
+		local ok, tree = pcall(getGameTree, nil, CONFIG.updateTreeDepth)
+		if ok then send{ type = 'gameTree', data = tree } end
+	end
+end
+local setAutoRefresh = function(enabled, intervalMs)
+	shutdownAutoRefresh()
+	autoRefreshEnabled = enabled
+	if enabled then
+		autoRefreshIntervalSec = math.max(MIN_AUTO_REFRESH_INTERVAL_SEC, (intervalMs or 5000) / 1000)
+		for _, serviceName in ipairs(CONFIG.gameTreeServices) do
+			local ok, service = pcall(game.GetService, game, serviceName)
+			if ok and service then attachAutoRefreshListeners(service) end
+		end
+		local autoRefreshHeartbeat = RunService.Heartbeat:Connect(autoRefreshHeartbeatTick)
+		local autoRefreshTopLevel = game.ChildAdded:Connect(function(child)
+			if table.find(CONFIG.gameTreeServices, child.Name) then
+				attachAutoRefreshListeners(child)
+				markAutoRefreshDirty()
+			end
+		end)
+		table.insert(refreshConnections, autoRefreshHeartbeat)
+		table.insert(refreshConnections, autoRefreshTopLevel)
+	end
+end
+local currentHighlight = nil
+local function clearHighlight()
+	if currentHighlight then
+		pcall(currentHighlight.Destroy, currentHighlight)
+		currentHighlight = nil
+	end
+end
 local MESSAGE_HANDLERS = {}
+MESSAGE_HANDLERS.selectInstance = function(message)
+	clearHighlight()
+	local instance = resolveInstancePath(message.path)
+	if instance and instance:IsA('PVInstance') then
+		local ok, hl = pcall(function()
+			local hl = Instance.new('Highlight')
+			hl.Name = '_UwUPawzSelection'
+			hl.Adornee = instance
+			hl.FillColor = Color3.fromHex('#a855f7') -- UwUPawz Purple
+			hl.FillTransparency = 0.5
+			hl.OutlineColor = Color3.new(1, 1, 1)
+			hl.OutlineTransparency = 0
+			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			hl.Parent = CoreGui or workspace
+			return hl
+		end)
+		if ok then currentHighlight = hl end
+	end
+end
+
+MESSAGE_HANDLERS.fireRemote = function(message)
+	local instance = resolveInstancePath(message.path)
+	if instance == nil or not (instance:IsA('RemoteEvent') or instance:IsA('UnreliableRemoteEvent')) then
+		sendResult('fireRemoteResult', message.id, false, { error = 'RemoteEvent not found' })
+		return
+	end
+	local ok, err = pcall(function()
+		instance:FireServer(unpack(message.arguments or {}))
+	end)
+	sendResult('fireRemoteResult', message.id, ok, { error = not ok and tostring(err) or nil })
+end
+
+MESSAGE_HANDLERS.invokeRemote = function(message)
+	local instance = resolveInstancePath(message.path)
+	if instance == nil or not instance:IsA('RemoteFunction') then
+		sendResult('invokeRemoteResult', message.id, false, { error = 'RemoteFunction not found' })
+		return
+	end
+	local ok, result = pcall(function()
+		return instance:InvokeServer(unpack(message.arguments or {}))
+	end)
+	sendResult('invokeRemoteResult', message.id, ok, { 
+		result = ok and serializeArguments(result) or nil,
+		error = not ok and tostring(result) or nil 
+	})
+end
+MESSAGE_HANDLERS.setAutoRefresh = function(message)
+	setAutoRefresh(message.enabled, message.intervalMs)
+end
 MESSAGE_HANDLERS.execute = function(message)
 local fn, loadError = loadstring(message.code)
 if fn == nil then
@@ -785,17 +901,41 @@ end
 sendResult('moduleInterface', message.id, true, { interface = reflectModuleInterface(module) })
 end
 MESSAGE_HANDLERS.setProperty = function(message)
-local instance = resolveInstancePath(message.path)
-if instance == nil then
-	sendResult('setPropertyResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
-	return
+    local instance = resolveInstancePath(message.path)
+    if instance == nil then
+        sendResult('setPropertyResult', message.id, false, { error = 'Instance not found at: ' .. table.concat(message.path, '.') })
+        return
+    end
+
+    local propertyName = message.property
+    local attrName = propertyName:match("^%[Attr%]%s+(.+)$")
+
+    local ok, err
+    if attrName then
+        ok, err = pcall(function()
+            instance:SetAttribute(attrName, parseValue(message.value, message.valueType))
+        end)
+    else
+        ok, err = pcall(function()
+            instance[propertyName] = parseValue(message.value, message.valueType)
+        end)
+    end
+
+    if not ok then
+        sendResult('setPropertyResult', message.id, false, { error = tostring(err) })
+        return
+    end
+    sendResult('setPropertyResult', message.id, true)
 end
-local ok, err = pcall(function() instance[message.property] = parseValue(message.value, message.valueType) end)
-if not ok then
-	sendResult('setPropertyResult', message.id, false, { error = tostring(err) })
-	return
-end
-sendResult('setPropertyResult', message.id, true)
+MESSAGE_HANDLERS.selectInstance = function(message)
+    local instance = (message.path and #message.path > 0) and resolveInstancePath(message.path) or nil
+    if instance and (instance:IsA("BasePart") or instance:IsA("Model")) then
+        SelectionHighlight.Adornee = instance
+        SelectionHighlight.Enabled = true
+    else
+        SelectionHighlight.Adornee = nil
+        SelectionHighlight.Enabled = false
+    end
 end
 MESSAGE_HANDLERS.teleportTo = function(message)
 local instance = resolveInstancePath(message.path)
@@ -1046,23 +1186,23 @@ if handler == nil then return end
 handler(message)
 end
 local setupLogHooks = function()
-    if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
-    LogService.MessageOut:Connect(function(message, messageType)
-        if not connected then return end
-        local level = "info"
-        if messageType == Enum.MessageType.MessageError then
-            level = "error"
-        elseif messageType == Enum.MessageType.MessageWarning then
-            level = "warn"
-        end
-        pcall(send, {
-            type = "log",
-            level = level,
-            message = message,
-            timestamp = os.time(),
-        })
-    end)
-    if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
+if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
+LogService.MessageOut:Connect(function(message, messageType)
+if not connected then return end
+local level = "info"
+if messageType == Enum.MessageType.MessageError then
+	level = "error"
+elseif messageType == Enum.MessageType.MessageWarning then
+	level = "warn"
+end
+pcall(send, {
+type = "log",
+level = level,
+message = message,
+timestamp = os.time(),
+})
+end)
+if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
 end
 local connect
 local scheduleReconnect
@@ -1113,16 +1253,18 @@ connected = true
 reconnectScheduled = false
 reconnectAttemptDelay = CONFIG.reconnectDelay
 healthProbeFailures = 0
-if getgenv and getgenv()._RBXDEV_BRIDGE then
-	getgenv()._RBXDEV_BRIDGE.connection = ws
+if getgenv and getgenv()._UWUPAWZ_BRIDGE then
+	getgenv()._UWUPAWZ_BRIDGE.connection = ws
 end
 send{ type = 'connected', executorName = executorName, version = executorVersion }
 send{ type = 'gameTree', data = getGameTree(nil, CONFIG.firstConnectDepth) }
 ws.OnMessage:Connect(handleMessage)
 ws.OnClose:Connect(function()
-connected = false
-connection = nil
-scheduleReconnect()
+	connected = false
+	connection = nil
+	clearHighlight()
+	shutdownAutoRefresh()
+	scheduleReconnect()
 end)
 return 'connected'
 end
