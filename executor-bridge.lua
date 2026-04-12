@@ -28,7 +28,7 @@ gameTreeServices  = {
 for k, v in pairs(userConfig) do CONFIG[k] = v end
 local DEFAULT_PROPERTIES = {
     Instance              = { 'Name', 'Parent', 'Archivable', 'ClassName' },
-    BasePart              = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation', 'CollisionGroupId' },
+    BasePart              = { 'Name', 'Transparency', 'Color', 'Material', 'MaterialVariant', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Massless', 'Position', 'Size', 'Rotation', 'CFrame', 'AssemblyLinearVelocity', 'AssemblyAngularVelocity', 'CollisionGroup', 'CollisionGroupId', 'CustomPhysicalProperties', 'EnableFluidForces', 'FluidFidelity', 'CollisionFidelity' },
     Part                  = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation', 'Shape' },
     MeshPart              = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation' },
     UnionOperation        = { 'Name', 'Transparency', 'Color', 'Material', 'Reflectance', 'Anchored', 'CanCollide', 'CanTouch', 'CanQuery', 'Locked', 'CastShadow', 'Position', 'Size', 'Rotation' },
@@ -55,13 +55,13 @@ local DEFAULT_PROPERTIES = {
     PointLight            = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Shadows' },
     SpotLight             = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows', 'Face' },
     SurfaceLight          = { 'Name', 'Enabled', 'Brightness', 'Color', 'Range', 'Angle', 'Shadows', 'Face' },
-    Frame                 = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'BorderSizePixel', 'Position', 'Size', 'AnchorPoint', 'ZIndex', 'LayoutOrder' },
+    Frame                 = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'BorderSizePixel', 'BorderColor3', 'Position', 'Size', 'AnchorPoint', 'ZIndex', 'LayoutOrder', 'Rotation', 'AutomaticSize', 'ClipsDescendants', 'Interactable', 'Selectable' },
     ScrollingFrame        = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'CanvasSize', 'ScrollingDirection', 'ScrollBarThickness' },
     ScreenGui             = { 'Name', 'Enabled', 'ResetOnSpawn', 'ZIndexBehavior', 'DisplayOrder', 'IgnoreGuiInset' },
     BillboardGui          = { 'Name', 'Enabled', 'Size', 'StudsOffset', 'MaxDistance', 'AlwaysOnTop', 'Adornee' },
     SurfaceGui            = { 'Name', 'Enabled', 'Face', 'PixelsPerStud', 'AlwaysOnTop', 'Adornee' },
     ViewportFrame         = { 'Name', 'Visible', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'Ambient', 'LightColor' },
-    TextLabel             = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'TextScaled', 'TextWrapped', 'TextXAlignment', 'TextYAlignment' },
+    TextLabel             = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'FontFace', 'TextScaled', 'TextWrapped', 'RichText', 'TextXAlignment', 'TextYAlignment', 'LineHeight', 'MaxVisibleGraphemes', 'TextStrokeTransparency', 'TextStrokeColor3', 'AutoLocalize' },
     TextButton            = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'TextScaled', 'TextWrapped' },
     TextBox               = { 'Name', 'Visible', 'Text', 'TextColor3', 'TextTransparency', 'TextSize', 'Font', 'PlaceholderText', 'ClearTextOnFocus' },
     ImageLabel            = { 'Name', 'Visible', 'Image', 'ImageColor3', 'ImageTransparency', 'ScaleType', 'TileSize' },
@@ -82,7 +82,7 @@ local DEFAULT_PROPERTIES = {
     RemoteFunction        = { 'Name' },
     BindableEvent         = { 'Name' },
     BindableFunction      = { 'Name' },
-    Humanoid              = { 'Name', 'Health', 'MaxHealth', 'WalkSpeed', 'JumpPower', 'JumpHeight', 'HipHeight', 'AutoRotate', 'UseJumpPower', 'DisplayName' },
+    Humanoid              = { 'Name', 'Health', 'MaxHealth', 'WalkSpeed', 'JumpPower', 'JumpHeight', 'HipHeight', 'AutoRotate', 'AutoJumpEnabled', 'UseJumpPower', 'DisplayName', 'MaxSlopeAngle', 'BrakeForceOnJump', 'HealthDisplayType', 'RigType', 'NameDisplayDistance', 'CameraOffset', 'BodyTypeScale', 'HeadScale', 'DepthScale', 'HeightScale', 'WidthScale', 'ProportionScale', 'MoveDirection' },
     HumanoidDescription   = { 'Name', 'HeadColor', 'TorsoColor', 'LeftArmColor', 'RightArmColor', 'LeftLegColor', 'RightLegColor' },
     Animation             = { 'Name', 'AnimationId' },
     ParticleEmitter       = { 'Name', 'Enabled', 'Rate', 'Lifetime', 'Speed', 'Color', 'Size', 'Transparency', 'Acceleration', 'Texture', 'SpreadAngle' },
@@ -100,7 +100,35 @@ local DEFAULT_PROPERTIES = {
     Motor6D               = { 'Name', 'Part0', 'Part1', 'C0', 'C1', 'CurrentAngle', 'MaxVelocity' },
     ProximityPrompt       = { 'Name', 'Enabled', 'ActionText', 'ObjectText', 'KeyboardKeyCode', 'HoldDuration', 'MaxActivationDistance', 'RequiresLineOfSight' },
     Tool                  = { 'Name', 'Enabled', 'CanBeDropped', 'RequiresHandle', 'ToolTip' },
-    Camera                = { 'Name', 'CameraType', 'FieldOfView', 'CFrame', 'Focus' },
+    Camera                = { 'Name', 'CameraType', 'FieldOfView', 'CFrame', 'Focus', 'MaxZoomDistance', 'MinZoomDistance', 'CameraSubject', 'DiagonalFieldOfView', 'FieldOfViewMode' },
+    Lighting              = { 'Name', 'Ambient', 'Brightness', 'ColorShift_Bottom', 'ColorShift_Top', 'OutdoorAmbient', 'ClockTime', 'GeographicLatitude', 'EnvironmentDiffuseScale', 'EnvironmentSpecularScale', 'ExposureCompensation', 'FogColor', 'FogEnd', 'FogStart', 'GlobalShadows', 'Technology', 'TimeOfDay' },
+    Atmosphere            = { 'Name', 'Color', 'Decay', 'Density', 'Glare', 'Haze', 'Offset' },
+    Sky                   = { 'Name', 'SkyboxBk', 'SkyboxDn', 'SkyboxFt', 'SkyboxLf', 'SkyboxRt', 'SkyboxUp', 'SunAngularSize', 'MoonAngularSize', 'StarCount', 'CelestialBodiesShown' },
+    BloomEffect           = { 'Name', 'Enabled', 'Intensity', 'Size', 'Threshold' },
+    BlurEffect            = { 'Name', 'Enabled', 'Size' },
+    ColorCorrectionEffect = { 'Name', 'Enabled', 'Brightness', 'Contrast', 'Saturation', 'TintColor' },
+    DepthOfFieldEffect    = { 'Name', 'Enabled', 'FarIntensity', 'FocusDistance', 'InFocusRadius', 'NearIntensity' },
+    SunRaysEffect         = { 'Name', 'Enabled', 'Intensity', 'Spread' },
+    Terrain               = { 'Name', 'Decoration', 'GrassLength', 'WaterColor', 'WaterReflectance', 'WaterTransparency', 'WaterWaveSize', 'WaterWaveSpeed' },
+    RopeConstraint        = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'Length', 'Restitution', 'WinchEnabled', 'WinchTarget', 'WinchForce', 'WinchSpeed' },
+    SpringConstraint      = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'Damping', 'MaxForce', 'Radius', 'Stiffness' },
+    RodConstraint         = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'Length' },
+    PrismaticConstraint   = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'ActuatorType', 'Speed', 'ServoMaxForce', 'LowerLimit', 'UpperLimit' },
+    HingeConstraint       = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'ActuatorType', 'AngularSpeed', 'MotorMaxTorque', 'ServoMaxTorque', 'LowerAngle', 'UpperAngle' },
+    BallSocketConstraint  = { 'Name', 'Enabled', 'Visible', 'Color', 'Thickness', 'LimitsEnabled', 'TwistLimitsEnabled', 'Radius' },
+    AlignPosition         = { 'Name', 'Enabled', 'ApplyAtCenterOfMass', 'MaxForce', 'MaxVelocity', 'ReactionForceEnabled', 'RigidityEnabled', 'Position', 'Responsiveness' },
+    AlignOrientation      = { 'Name', 'Enabled', 'AlignTorque', 'MaxTorque', 'MaxAngularVelocity', 'ReactionTorqueEnabled', 'Responsiveness', 'PrimaryAxisOnly' },
+    LinearVelocity        = { 'Name', 'Enabled', 'MaxForce', 'VectorVelocity', 'LineVelocity', 'LineDirection', 'RelativeTo' },
+    AngularVelocity       = { 'Name', 'Enabled', 'MaxTorque', 'AngularVelocity', 'RelativeTo' },
+    LineForce             = { 'Name', 'Enabled', 'ApplyAtCenterOfMass', 'InverseSquareLaw', 'Magnitude', 'MaxForce', 'ReactionForceEnabled' },
+    VectorForce           = { 'Name', 'Enabled', 'ApplyAtCenterOfMass', 'Force', 'RelativeTo' },
+    Torque                = { 'Name', 'Enabled', 'Torque', 'RelativeTo' },
+    BodyPosition          = { 'Name', 'MaxForce', 'Position', 'P', 'D' },
+    BodyGyro              = { 'Name', 'MaxTorque', 'CFrame', 'P', 'D' },
+    BodyVelocity          = { 'Name', 'MaxForce', 'Velocity', 'P' },
+    BodyAngularVelocity   = { 'Name', 'MaxTorque', 'AngularVelocity', 'P' },
+    VideoFrame            = { 'Name', 'Visible', 'Video', 'Looped', 'Playing', 'TimePosition', 'Volume', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'AnchorPoint', 'ZIndex' },
+    CanvasGroup           = { 'Name', 'Visible', 'GroupColor3', 'GroupTransparency', 'BackgroundColor3', 'BackgroundTransparency', 'Position', 'Size', 'AnchorPoint', 'ZIndex', 'ClipsDescendants' },
 }
 local CLASS_PATTERNS = {
     { pattern = 'Value',      props = { 'Name', 'Value' } },
@@ -121,15 +149,48 @@ local VALUE_SERIALIZERS = {
 string    = function(v) return v, 'string' end,
 number    = function(v) return tostring(v), 'number' end,
 boolean   = function(v) return tostring(v), 'boolean' end,
-Instance  = function(v) return v:GetFullName(), 'Instance', v.ClassName end,
+Instance  = function(v)
+	local ok, path = pcall(function() return v:GetFullName() end)
+	local cn = 'Instance'
+	local ok2, c = pcall(function() return v.ClassName end)
+	if ok2 and type(c) == 'string' then cn = c end
+	return (ok and path or '[Instance]'), 'Instance', cn
+end,
+Font = function(v) return tostring(v), 'other' end,
+FontFace = function(v) return tostring(v), 'other' end,
+ColorSequence = function(v) return tostring(v), 'other' end,
+NumberSequence = function(v) return tostring(v), 'other' end,
+Content = function(v) return tostring(v), 'other' end,
+DateTime = function(v) return tostring(v), 'other' end,
+Rect = function(v) return tostring(v), 'other' end,
+Region3 = function(v) return tostring(v), 'other' end,
+Region3int16 = function(v) return tostring(v), 'other' end,
+Vector3int16 = function(v) return tostring(v), 'other' end,
+BinaryString = function(v)
+	local ok, n = pcall(function() return #v end)
+	return '[BinaryString len=' .. tostring(ok and n or 0) .. ']', 'other'
+end,
 Vector3   = function(v) return string.format('%.3f, %.3f, %.3f', v.X, v.Y, v.Z), 'Vector3' end,
 Vector2   = function(v) return string.format('%.3f, %.3f', v.X, v.Y), 'Vector2' end,
-CFrame    = function(v) return string.format('%.3f, %.3f, %.3f', v.X, v.Y, v.Z), 'CFrame' end,
+CFrame    = function(v)
+local c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12 = v:GetComponents()
+local t = { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12 }
+local p = {}
+for i = 1, 12 do p[i] = string.format('%.6g', t[i]) end
+return table.concat(p, ', '), 'CFrame'
+end,
 Color3    = function(v) return string.format('%.3f, %.3f, %.3f', v.R, v.G, v.B), 'Color3' end,
 BrickColor = function(v) return v.Name, 'BrickColor' end,
 UDim      = function(v) return string.format('%.3f, %d', v.Scale, v.Offset), 'UDim' end,
 UDim2     = function(v) return string.format('{%.3f, %d}, {%.3f, %d}', v.X.Scale, v.X.Offset, v.Y.Scale, v.Y.Offset), 'UDim2' end,
 EnumItem  = function(v) return tostring(v), 'EnumItem' end,
+PhysicalProperties = function(v)
+return string.format('%.6g, %.6g, %.6g, %.6g, %.6g', v.Density, v.Friction, v.Elasticity, v.FrictionWeight, v.ElasticityWeight), 'PhysicalProperties'
+end,
+NumberRange = function(v) return string.format('%.6g, %.6g', v.Min, v.Max), 'NumberRange' end,
+Ray = function(v)
+return string.format('%.6g, %.6g, %.6g, %.6g, %.6g, %.6g', v.Origin.X, v.Origin.Y, v.Origin.Z, v.Direction.X, v.Direction.Y, v.Direction.Z), 'Ray'
+end,
 }
 local VALUE_PARSERS = {
 string  = function(v) return v end,
@@ -137,8 +198,42 @@ number  = function(v) return tonumber(v) end,
 boolean = function(v) return v == 'true' end,
 ['nil'] = function() return nil end,
 Vector3 = function(v)
-local x, y, z = v:match'([^,]+),%s*([^,]+),%s*([^,]+)'
-return Vector3.new(tonumber(x), tonumber(y), tonumber(z))
+local nums = {}
+for part in v:gmatch('([^,]+)') do
+	local n = tonumber((part:gsub('^%s*(.-)%s*$', '%1')))
+	if n ~= nil then table.insert(nums, n) end
+end
+if #nums >= 3 then return Vector3.new(nums[1], nums[2], nums[3]) end
+return nil
+end,
+CFrame = function(v)
+local nums = {}
+for part in v:gmatch('([^,]+)') do
+	local n = tonumber((part:gsub('^%s*(.-)%s*$', '%1')))
+	if n ~= nil then table.insert(nums, n) end
+end
+if #nums >= 12 then return CFrame.new(unpack(nums)) end
+if #nums >= 3 then return CFrame.new(nums[1], nums[2], nums[3]) end
+return nil
+end,
+PhysicalProperties = function(v)
+local a, b, c, d, e = v:match('^%s*([^,]+)%s*,%s*([^,]+)%s*,%s*([^,]+)%s*,%s*([^,]+)%s*,%s*([^,]+)%s*$')
+if a == nil then return nil end
+return PhysicalProperties.new(tonumber(a), tonumber(b), tonumber(c), tonumber(d), tonumber(e))
+end,
+NumberRange = function(v)
+local a, b = v:match('^%s*([^,]+)%s*,%s*([^,]+)%s*$')
+if a == nil then return nil end
+return NumberRange.new(tonumber(a), tonumber(b))
+end,
+Ray = function(v)
+local nums = {}
+for part in v:gmatch('([^,]+)') do
+	local n = tonumber((part:gsub('^%s*(.-)%s*$', '%1')))
+	if n ~= nil then table.insert(nums, n) end
+end
+if #nums >= 6 then return Ray.new(Vector3.new(nums[1], nums[2], nums[3]), Vector3.new(nums[4], nums[5], nums[6])) end
+return nil
 end,
 Vector2 = function(v)
 local x, y = v:match'([^,]+),%s*([^,]+)'
@@ -205,15 +300,6 @@ local autoRefreshLastFlush = 0
 local MIN_AUTO_REFRESH_INTERVAL_SEC = 2.0
 local MAX_COALESCE_SEC = 30.0
 
--- Selection Highlight
-local SelectionHighlight = Instance.new("Highlight")
-SelectionHighlight.Name = "rbxdev_SelectionHighlight"
-SelectionHighlight.FillColor = Color3.fromRGB(0, 170, 255)
-SelectionHighlight.FillTransparency = 0.5
-SelectionHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-SelectionHighlight.OutlineTransparency = 0
-SelectionHighlight.Parent = (gethui and gethui()) or game:GetService("CoreGui") or workspace
-
 if getgenv then
 	getgenv()._UWUPAWZ_BRIDGE = {
 	id = BRIDGE_ID,
@@ -227,54 +313,154 @@ if getgenv == nil then return bridgeAlive end
 local bridge = getgenv()._UWUPAWZ_BRIDGE
 return bridge ~= nil and bridge.id == BRIDGE_ID and bridge.alive
 end
-local sanitizeForJson
-sanitizeForJson = function(v, depth)
-depth = depth or 0
-if depth > 50 then return nil end
-local t = type(v)
-if t == 'string' then
-	return v:gsub("%z", ""):gsub("[%c]", function(c)
+-- HttpService:JSONEncode 对非法 UTF-8、userdata 等会失败；CoreGui 下名称/属性常见异常字节或未覆盖类型。
+local jsonSafeString = function(s)
+if type(s) ~= 'string' then
+	s = tostring(s)
+end
+s = s:gsub("%z", ""):gsub("[%c]", function(c)
 	if c == "\n" or c == "\t" or c == "\r" then return c end
 	return ""
 end)
-elseif t == 'number' then
+if utf8 ~= nil and utf8.len ~= nil then
+	local guard = 0
+	while guard < 64 do
+		guard = guard + 1
+		local len, badPos = utf8.len(s)
+		if len ~= nil then break end
+		if type(badPos) ~= 'number' or badPos < 1 or badPos > #s then
+			s = s:gsub("[\128-\255]", "?")
+			break
+		end
+		s = s:sub(1, badPos - 1) .. "?" .. s:sub(badPos + 1)
+	end
+end
+return s
+end
+local sanitizeForJson
+sanitizeForJson = function(v, depth, seen)
+depth = depth or 0
+seen = seen or {}
+if depth > 80 then return '[depth-limit]' end
+local ty = typeof(v)
+if v == nil or ty == 'nil' then
+	return nil
+end
+if ty == 'string' then
+	return jsonSafeString(v)
+end
+if ty == 'number' then
 	if v ~= v or v == math.huge or v == -math.huge then return 0 end
 	return v
-elseif t == 'boolean' then
+end
+if ty == 'boolean' then
 	return v
-elseif t == 'table' then
+end
+if ty == 'function' then
+	return '[function]'
+end
+if ty == 'table' then
+	if seen[v] == true then return '[cycle]' end
+	seen[v] = true
 	local clean = {}
-	local isArray = #v > 0 and (function()
+	local len = #v
 	local count = 0
 	for _ in pairs(v) do count = count + 1 end
-	return count == #v
-end)()
-if isArray then
-	for i = 1, #v do
-		local val = sanitizeForJson(v[i], depth + 1)
-		if val ~= nil then table.insert(clean, val) end
-	end
-else
-	for k, val in pairs(v) do
-		local cleanVal = sanitizeForJson(val, depth + 1)
-		if cleanVal ~= nil then
-			local cleanKey = type(k) == 'string' and k:gsub("[^%w_]", "") or tostring(k)
-			clean[cleanKey] = cleanVal
+	local isDenseArray = len > 0 and count == len
+	if isDenseArray then
+		for i = 1, len do
+			local val = sanitizeForJson(v[i], depth + 1, seen)
+			if val ~= nil then table.insert(clean, val) end
+		end
+	else
+		local keyIdx = 0
+		for k, val in pairs(v) do
+			keyIdx = keyIdx + 1
+			local cleanVal = sanitizeForJson(val, depth + 1, seen)
+			if cleanVal ~= nil then
+				local cleanKey
+				if type(k) == 'string' then
+					cleanKey = k:gsub("[^%w_]", "")
+				else
+					cleanKey = tostring(k)
+				end
+				if cleanKey == '' then cleanKey = '_k' .. tostring(keyIdx) end
+				clean[cleanKey] = cleanVal
+			end
 		end
 	end
+	seen[v] = nil
+	return clean
 end
-return clean
+if ty == 'Instance' then
+	local ok, path = pcall(function() return v:GetFullName() end)
+	return jsonSafeString(ok and path or '[Instance]')
 end
-return nil
+if ty == 'buffer' then
+	return '[buffer]'
+end
+if ty == 'thread' then
+	return '[thread]'
+end
+if ty == 'userdata' then
+	local ok, s = pcall(tostring, v)
+	return jsonSafeString(ok and s or '[userdata]')
+end
+local ok, s = pcall(tostring, v)
+return jsonSafeString(ok and s or ('[' .. ty .. ']'))
+end
+-- 二次兜底：仍无法编码时把所有非 JSON 原生类型压成字符串（避免 CoreGui 等漏网之鱼）。
+local bleachJsonValue
+bleachJsonValue = function(v, depth)
+depth = depth or 0
+if depth > 100 then return '[depth]' end
+local ty = typeof(v)
+if v == nil or ty == 'nil' then return nil end
+if ty == 'string' then return jsonSafeString(v) end
+if ty == 'number' then
+	if v ~= v or v == math.huge or v == -math.huge then return 0 end
+	return v
+end
+if ty == 'boolean' then return v end
+if ty == 'table' then
+	local len = #v
+	local count = 0
+	for _ in pairs(v) do count = count + 1 end
+	if len > 0 and count == len then
+		local out = {}
+		for i = 1, len do
+			out[i] = bleachJsonValue(v[i], depth + 1)
+		end
+		return out
+	end
+	local out = {}
+	local keyIdx = 0
+	for k, val in pairs(v) do
+		keyIdx = keyIdx + 1
+		local cleanKey
+		if type(k) == 'string' then
+			cleanKey = jsonSafeString(k):gsub("[^%w_]", "")
+		else
+			cleanKey = 'k' .. tostring(k)
+		end
+		if cleanKey == '' then cleanKey = '_k' .. tostring(keyIdx) end
+		out[cleanKey] = bleachJsonValue(val, depth + 1)
+	end
+	return out
+end
+local ok, s = pcall(tostring, v)
+return jsonSafeString(ok and s or ('[' .. ty .. ']'))
 end
 local jsonEncode = function(data)
 local safe = sanitizeForJson(data)
 local ok, result = pcall(HttpService.JSONEncode, HttpService, safe)
-if not ok then
-	warn('[rbxdev-bridge] JSONEncode failed: ' .. tostring(result))
-	return nil
-end
-return result
+if ok then return result end
+warn('[rbxdev-bridge] JSONEncode failed (first pass): ' .. tostring(result))
+local bleached = bleachJsonValue(safe, 0)
+local ok2, result2 = pcall(HttpService.JSONEncode, HttpService, bleached)
+if ok2 then return result2 end
+warn('[rbxdev-bridge] JSONEncode failed (second pass): ' .. tostring(result2))
+return nil
 end
 local jsonDecode = function(data)
 local success, result = pcall(HttpService.JSONDecode, HttpService, data)
@@ -569,25 +755,90 @@ local remoteName = remote.Name
 local blocked = remoteSpyBlockedNames[remoteName] == true or remoteSpyBlockedPaths[remotePathString] == true
 return blocked, remoteName, remotePath
 end
-local getDefaultProperties = function(className)
-local props = DEFAULT_PROPERTIES[className]
-if props ~= nil then return props end
-for _, entry in ipairs(CLASS_PATTERNS) do
-	if className:find(entry.pattern) ~= nil then return entry.props end
+local tryExecutorPropertyList = function(instance)
+local tryFns = {}
+if type(getproperties) == 'function' then table.insert(tryFns, getproperties) end
+if type(getprops) == 'function' then table.insert(tryFns, getprops) end
+if type(syn) == 'table' and type(syn.get_properties) == 'function' then table.insert(tryFns, syn.get_properties) end
+for _, fn in ipairs(tryFns) do
+	local ok, plist = pcall(fn, instance)
+	if ok and type(plist) == 'table' then
+		local names = {}
+		local seen = {}
+		local function addName(n)
+			if type(n) ~= 'string' or n == 'Parent' then return end
+			if not seen[n] then seen[n] = true; table.insert(names, n) end
+		end
+		local count = 0
+		for i = 1, #plist do
+			local item = plist[i]
+			if type(item) == 'string' then
+				addName(item)
+				count = count + 1
+			elseif type(item) == 'table' and type(item.Name) == 'string' then
+				addName(item.Name)
+				count = count + 1
+			end
+		end
+		if count == 0 then
+			for k in pairs(plist) do
+				if type(k) == 'string' then addName(k); count = count + 1 end
+			end
+		end
+		if #names > 0 then
+			table.sort(names)
+			return names
+		end
+	end
 end
-return { 'Name', 'ClassName' }
+return nil
+end
+local mergePropsForInstance = function(instance)
+local fromExec = tryExecutorPropertyList(instance)
+if fromExec ~= nil then return fromExec end
+local names = {}
+local seen = {}
+local function addProp(n)
+	if type(n) ~= 'string' or n == 'Parent' then return end
+	if not seen[n] then seen[n] = true; table.insert(names, n) end
+end
+local classes = {}
+for className in pairs(DEFAULT_PROPERTIES) do
+	if instance:IsA(className) then table.insert(classes, className) end
+end
+table.sort(classes)
+for _, className in ipairs(classes) do
+	for _, p in ipairs(DEFAULT_PROPERTIES[className]) do addProp(p) end
+end
+local cn = instance.ClassName
+for _, entry in ipairs(CLASS_PATTERNS) do
+	if cn:find(entry.pattern) ~= nil then
+		for _, p in ipairs(entry.props) do addProp(p) end
+	end
+end
+if #names == 0 then
+	addProp('Name')
+	addProp('ClassName')
+end
+if #names > 1 then table.sort(names) end
+return names
 end
 local serializePropertyValue = function(name, value)
-if value == nil then return { name = name, value = 'nil', valueType = 'nil' } end
-local valueType = typeof(value)
-local serializer = VALUE_SERIALIZERS[valueType]
-if serializer == nil then
-	return { name = name, value = tostring(value), valueType = 'other' }
-end
-local serializedValue, typeName, className = serializer(value)
-local result = { name = name, value = serializedValue, valueType = typeName }
-if className ~= nil then result.className = className end
-return result
+local ok, result = pcall(function()
+	if value == nil then return { name = name, value = 'nil', valueType = 'nil' } end
+	local valueType = typeof(value)
+	local serializer = VALUE_SERIALIZERS[valueType]
+	if serializer == nil then
+		local tsOk, ts = pcall(tostring, value)
+		return { name = name, value = tsOk and ts or ('[' .. valueType .. ']'), valueType = 'other' }
+	end
+	local serializedValue, typeName, className = serializer(value)
+	local out = { name = name, value = serializedValue, valueType = typeName }
+	if className ~= nil then out.className = className end
+	return out
+end)
+if ok and type(result) == 'table' then return result end
+return { name = name, value = '[read error]', valueType = 'other' }
 end
 local parseValue = function(value, valueType)
 local parser = VALUE_PARSERS[valueType]
@@ -604,7 +855,7 @@ line = line and tonumber(line) or nil,
 end
 local getInstanceProperties = function(instance, requestedProps)
     local props = {}
-    local propsToGet = requestedProps or getDefaultProperties(instance.ClassName)
+    local propsToGet = requestedProps or mergePropsForInstance(instance)
 
     -- Basic properties
     for _, propName in ipairs(propsToGet) do
@@ -629,13 +880,8 @@ local ok, name = pcall(function() return instance.Name end)
 local ok2, className = pcall(function() return instance.ClassName end)
 if not (ok and ok2) then return nil end
 local function cleanString(s: string): string
-local success, result = pcall(function()
-return s:gsub("%z", ""):gsub("[%c]", function(c)
-if c == "\n" or c == "\t" or c == "\r" then return c end
-return ""
-end)
-end)
-return success and result or "UnnamedInstance"
+if type(s) ~= 'string' then return 'UnnamedInstance' end
+return jsonSafeString(s)
 end
 local node = { name = cleanString(name), className = cleanString(className) }
 local ok3, children = pcall(instance.GetChildren, instance)
@@ -788,21 +1034,31 @@ local MESSAGE_HANDLERS = {}
 MESSAGE_HANDLERS.selectInstance = function(message)
 	clearHighlight()
 	local instance = resolveInstancePath(message.path)
-	if instance and instance:IsA('PVInstance') then
-		local ok, hl = pcall(function()
-			local hl = Instance.new('Highlight')
-			hl.Name = '_UwUPawzSelection'
-			hl.Adornee = instance
-			hl.FillColor = Color3.fromHex('#a855f7') -- UwUPawz Purple
-			hl.FillTransparency = 0.5
-			hl.OutlineColor = Color3.new(1, 1, 1)
-			hl.OutlineTransparency = 0
-			hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-			hl.Parent = CoreGui or workspace
-			return hl
-		end)
-		if ok then currentHighlight = hl end
+	if instance == nil then return end
+	local adornee = instance
+	if instance:IsA('Model') then
+		local okBox = pcall(function() instance:GetBoundingBox() end)
+		if not okBox then
+			local part = instance:FindFirstChildWhichIsA('BasePart', true)
+			if part ~= nil then adornee = part end
+		end
+	elseif not instance:IsA('PVInstance') then
+		return
 	end
+	local parentGui = (gethui and gethui()) or CoreGui or workspace
+	local ok, hl = pcall(function()
+		local h = Instance.new('Highlight')
+		h.Name = '_UwUPawzSelection'
+		h.Adornee = adornee
+		h.FillColor = Color3.fromHex('#a855f7')
+		h.FillTransparency = 0.45
+		h.OutlineColor = Color3.new(1, 1, 1)
+		h.OutlineTransparency = 0
+		h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		h.Parent = parentGui
+		return h
+	end)
+	if ok and hl ~= nil then currentHighlight = hl end
 end
 
 MESSAGE_HANDLERS.fireRemote = function(message)
@@ -926,16 +1182,6 @@ MESSAGE_HANDLERS.setProperty = function(message)
         return
     end
     sendResult('setPropertyResult', message.id, true)
-end
-MESSAGE_HANDLERS.selectInstance = function(message)
-    local instance = (message.path and #message.path > 0) and resolveInstancePath(message.path) or nil
-    if instance and (instance:IsA("BasePart") or instance:IsA("Model")) then
-        SelectionHighlight.Adornee = instance
-        SelectionHighlight.Enabled = true
-    else
-        SelectionHighlight.Adornee = nil
-        SelectionHighlight.Enabled = false
-    end
 end
 MESSAGE_HANDLERS.teleportTo = function(message)
 local instance = resolveInstancePath(message.path)
@@ -1198,7 +1444,7 @@ end
 pcall(send, {
 type = "log",
 level = level,
-message = message,
+message = typeof(message) == "string" and message or tostring(message),
 timestamp = os.time(),
 })
 end)
