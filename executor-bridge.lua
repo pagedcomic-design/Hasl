@@ -676,6 +676,11 @@ local function getGameTree(services: {string}?, depth: number?): table
     return tree
 end
 local getTargetPosition = function(instance)
+if instance:IsA'Player' then
+	local char = instance.Character; local root = char and char:FindFirstChild("HumanoidRootPart")
+	if root then return root.Position + Vector3.new(0, 5, 0) end
+	error"Player character not found"
+end
 if instance:IsA'BasePart' then return instance.Position + Vector3.new(0, 5, 0) end
 if instance:IsA'Model' then
 	local primaryPart = instance.PrimaryPart
@@ -825,6 +830,38 @@ if not ok then
 	return
 end
 sendResult('deleteInstanceResult', message.id, true)
+end
+MESSAGE_HANDLERS.dumpModule = function(message)
+local instance = resolveInstancePath(message.path)
+if not (instance and instance:IsA"ModuleScript") then
+	sendResult("dumpModuleResult", message.id, false, { error = "Module not found" })
+	return
+end
+local ok, result = pcall(require, instance)
+if not ok then
+	sendResult("dumpModuleResult", message.id, false, { error = tostring(result) })
+	return
+end
+local dumped = tableToLua(result)
+sendResult("dumpModuleResult", message.id, true, { data = dumped })
+end
+MESSAGE_HANDLERS.decompileScript = function(message)
+local instance = resolveInstancePath(message.path)
+if not instance then
+	sendResult("decompileResult", message.id, false, { error = "Script not found" })
+	return
+end
+local decompiler = decompile or (syn and syn.decompile) or (Fluxus and Fluxus.decompile) or (GetExecutor and GetExecutor().decompile)
+if not decompiler then
+	sendResult("decompileResult", message.id, false, { error = "Decompiler not supported" })
+	return
+end
+local ok, source = pcall(decompiler, instance)
+if not ok then
+	sendResult("decompileResult", message.id, false, { error = tostring(source) })
+	return
+end
+sendResult("decompileResult", message.id, true, { data = source })
 end
 MESSAGE_HANDLERS.reparentInstance = function(message)
 local source = resolveInstancePath(message.sourcePath)
