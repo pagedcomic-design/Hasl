@@ -19,7 +19,7 @@ updateTreeDepth   = 2,
 expandedTreeDepth = 1, 
 gameTreeServices  = {
 'Workspace', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
-'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting',
+'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting', 'CoreGui',
 },
 }
 for k, v in pairs(userConfig) do CONFIG[k] = v end
