@@ -1023,42 +1023,73 @@ local setAutoRefresh = function(enabled, intervalMs)
 		table.insert(refreshConnections, autoRefreshTopLevel)
 	end
 end
-local currentHighlight = nil
-local function clearHighlight()
-	if currentHighlight then
-		pcall(currentHighlight.Destroy, currentHighlight)
-		currentHighlight = nil
+-- Dex 风格：SelectionBox 线框（非 Highlight 填充）；挂 Workspace 避免 CoreGui/gethui 下闪退。
+local selectionAdorns = {}
+local MAX_SELECTION_BOXES = 100
+local function clearSelectionAdorns()
+	for _, ad in ipairs(selectionAdorns) do
+		if ad ~= nil then
+			pcall(function()
+				ad:Destroy()
+			end)
+		end
 	end
+	selectionAdorns = {}
 end
 local MESSAGE_HANDLERS = {}
 MESSAGE_HANDLERS.selectInstance = function(message)
-	clearHighlight()
-	local instance = resolveInstancePath(message.path)
-	if instance == nil then return end
-	local adornee = instance
-	if instance:IsA('Model') then
-		local okBox = pcall(function() instance:GetBoundingBox() end)
-		if not okBox then
-			local part = instance:FindFirstChildWhichIsA('BasePart', true)
-			if part ~= nil then adornee = part end
+	clearSelectionAdorns()
+	local okRun, errRun = pcall(function()
+		local path = message.path
+		if type(path) ~= 'table' or #path == 0 then return end
+		local instance = resolveInstancePath(path)
+		if instance == nil then return end
+		local alive = pcall(function()
+			return instance.Parent
+		end)
+		if not alive then return end
+		local okPv, isPv = pcall(function()
+			return instance:IsA('PVInstance')
+		end)
+		if not okPv or isPv ~= true then return end
+		local adornParent = workspace
+		local dexOrange = Color3.fromRGB(255, 178, 64)
+		local function tryAddBox(adornee)
+			if adornee == nil or #selectionAdorns >= MAX_SELECTION_BOXES then return false end
+			local ok, box = pcall(function()
+				local b = Instance.new('SelectionBox')
+				b.Name = '_UwUPawzSelection'
+				b.Adornee = adornee
+				b.LineThickness = 0.05
+				b.SurfaceTransparency = 1
+				b.Color3 = dexOrange
+				b.Parent = adornParent
+				return b
+			end)
+			if ok and box ~= nil then
+				table.insert(selectionAdorns, box)
+				return true
+			end
+			return false
 		end
-	elseif not instance:IsA('PVInstance') then
-		return
-	end
-	local parentGui = (gethui and gethui()) or CoreGui or workspace
-	local ok, hl = pcall(function()
-		local h = Instance.new('Highlight')
-		h.Name = '_UwUPawzSelection'
-		h.Adornee = adornee
-		h.FillColor = Color3.fromHex('#a855f7')
-		h.FillTransparency = 0.45
-		h.OutlineColor = Color3.new(1, 1, 1)
-		h.OutlineTransparency = 0
-		h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		h.Parent = parentGui
-		return h
+		if tryAddBox(instance) then return end
+		local okM, isModel = pcall(function()
+			return instance:IsA('Model')
+		end)
+		if not okM or isModel ~= true then return end
+		local okDesc, desc = pcall(function()
+			return instance:GetDescendants()
+		end)
+		if not okDesc or type(desc) ~= 'table' then return end
+		for _, d in ipairs(desc) do
+			if #selectionAdorns >= MAX_SELECTION_BOXES then break end
+			local okBp, isBp = pcall(function()
+				return d:IsA('BasePart')
+			end)
+			if okBp and isBp == true then tryAddBox(d) end
+		end
 	end)
-	if ok and hl ~= nil then currentHighlight = hl end
+	if not okRun then warn('[rbxdev-bridge] selectInstance: ' .. tostring(errRun)) end
 end
 
 MESSAGE_HANDLERS.fireRemote = function(message)
@@ -1508,7 +1539,7 @@ ws.OnMessage:Connect(handleMessage)
 ws.OnClose:Connect(function()
 	connected = false
 	connection = nil
-	clearHighlight()
+	clearSelectionAdorns()
 	shutdownAutoRefresh()
 	scheduleReconnect()
 end)
