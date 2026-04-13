@@ -4,9 +4,15 @@ local Players = cloneref(game:GetService'Players')
 local LogService = cloneref(game:GetService'LogService')
 local RunService = cloneref(game:GetService'RunService')
 local CoreGui = pcall(game.GetService, game, 'CoreGui') and cloneref(game:GetService'CoreGui') or nil
+local nativePrint = print
+local nativeWarn = warn
 local BRIDGE_ID = tostring(math.random(1, 999999999))
 if getgenv and getgenv()._UWUPAWZ_BRIDGE then
 	local old = getgenv()._UWUPAWZ_BRIDGE
+	if old.nativePrint then pcall(function() _G.print = old.nativePrint end) end
+	if old.nativeWarn then pcall(function() _G.warn = old.nativeWarn end) end
+	if getgenv()._RBXDEV_OUTPUT_HOOKED then getgenv()._RBXDEV_OUTPUT_HOOKED = nil end
+	_G._RBXDEV_OUTPUT_HOOKED = nil
 	if old.connection then pcall(old.connection.Close, old.connection) end
 	for _, conn in ipairs(old.refreshConnections or {}) do pcall(conn.Disconnect, conn) end
 	old.alive = false
@@ -20,6 +26,7 @@ enableHealthProbe = true,
 firstConnectDepth = 1,
 updateTreeDepth   = 2,
 expandedTreeDepth = 1,
+suppressGameConsoleLog = true,
 gameTreeServices  = {
 'Workspace', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
 'StarterGui', 'StarterPack', 'StarterPlayer', 'Lighting', 'CoreGui',
@@ -273,7 +280,7 @@ or syn_request
 or (syn and syn.request)
 or (http and http.request)
 if WebSocket == nil then
-	warn'[rbxdev-bridge] No WebSocket implementation found!'
+	nativeWarn'[rbxdev-bridge] No WebSocket implementation found!'
 	return
 end
 local executorName, executorVersion = (function()
@@ -306,6 +313,8 @@ if getgenv then
 	connection = nil,
 	refreshConnections = refreshConnections,
 	alive = true,
+	nativePrint = nativePrint,
+	nativeWarn = nativeWarn,
 	}
 end
 local isBridgeAlive = function()
@@ -455,11 +464,11 @@ local jsonEncode = function(data)
 local safe = sanitizeForJson(data)
 local ok, result = pcall(HttpService.JSONEncode, HttpService, safe)
 if ok then return result end
-warn('[rbxdev-bridge] JSONEncode failed (first pass): ' .. tostring(result))
+nativeWarn('[rbxdev-bridge] JSONEncode failed (first pass): ' .. tostring(result))
 local bleached = bleachJsonValue(safe, 0)
 local ok2, result2 = pcall(HttpService.JSONEncode, HttpService, bleached)
 if ok2 then return result2 end
-warn('[rbxdev-bridge] JSONEncode failed (second pass): ' .. tostring(result2))
+nativeWarn('[rbxdev-bridge] JSONEncode failed (second pass): ' .. tostring(result2))
 return nil
 end
 local jsonDecode = function(data)
@@ -508,15 +517,15 @@ if connection == nil or not connected then return end
 local encoded = jsonEncode(data)
 if encoded == nil then return end
 if #encoded > 1000000 then
-	warn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
+	nativeWarn("[rbxdev-bridge] Packet too large to send safely (" .. (#encoded/1024) .. " KB). Skipping.")
 	return
 end
 if #encoded > 50000 then
-	print(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
+	nativePrint(string.format("[rbxdev-bridge] Sending large packet: %.1f KB", #encoded / 1024))
 end
 local ok, err = pcall(function() connection:Send(encoded) end)
 if not ok then
-	warn("[rbxdev-bridge] Send failed: " .. tostring(err))
+	nativeWarn("[rbxdev-bridge] Send failed: " .. tostring(err))
 end
 end
 local sendResult = function(messageType, id, success, payload)
@@ -916,7 +925,7 @@ local function getGameTree(services: {string}?, depth: number?): table
 local tree = {}
 local treeDepth = depth or CONFIG.updateTreeDepth
 local added = {}
-print("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
+nativePrint("[rbxdev-bridge] Serializing game tree, depth:", treeDepth)
 for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
 	local ok, service = pcall(game.GetService, game, serviceName)
 	if ok and service then
@@ -927,7 +936,7 @@ for _, serviceName in ipairs(services or CONFIG.gameTreeServices) do
 		end
 	end
 end
-print("[rbxdev-bridge] Root services serialized:", #tree)
+nativePrint("[rbxdev-bridge] Root services serialized:", #tree)
 return tree
 end
 local getTargetPosition = function(instance)
@@ -1089,7 +1098,7 @@ MESSAGE_HANDLERS.selectInstance = function(message)
 			if okBp and isBp == true then tryAddBox(d) end
 		end
 	end)
-	if not okRun then warn('[rbxdev-bridge] selectInstance: ' .. tostring(errRun)) end
+	if not okRun then nativeWarn('[rbxdev-bridge] selectInstance: ' .. tostring(errRun)) end
 end
 
 MESSAGE_HANDLERS.fireRemote = function(message)
@@ -1410,7 +1419,7 @@ else
 	oth.hook(ncFunc, oldNamecall)
 end
 end
-print'[rbxdev-bridge] Remote spy enabled (oth)'
+nativePrint'[rbxdev-bridge] Remote spy enabled (oth)'
 else
 	local oldNamecall
 	oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
@@ -1429,7 +1438,7 @@ end))
 spyCleanup = function()
 hookmetamethod(game, '__namecall', oldNamecall)
 end
-print'[rbxdev-bridge] Remote spy enabled (hookmetamethod)'
+nativePrint'[rbxdev-bridge] Remote spy enabled (hookmetamethod)'
 end
 remoteSpyEnabled = true
 elseif not message.enabled and remoteSpyEnabled then
@@ -1438,7 +1447,7 @@ elseif not message.enabled and remoteSpyEnabled then
 		spyCleanup = nil
 	end
 	remoteSpyEnabled = false
-	print'[rbxdev-bridge] Remote spy disabled'
+	nativePrint'[rbxdev-bridge] Remote spy disabled'
 end
 end)
 if not ok then
@@ -1463,23 +1472,45 @@ if handler == nil then return end
 handler(message)
 end
 local setupLogHooks = function()
-if getgenv and getgenv()._RBXDEV_LOG_HOOKED then return end
-LogService.MessageOut:Connect(function(message, messageType)
-if not connected then return end
-local level = "info"
-if messageType == Enum.MessageType.MessageError then
-	level = "error"
-elseif messageType == Enum.MessageType.MessageWarning then
-	level = "warn"
+if not (getgenv and getgenv()._RBXDEV_LOG_HOOKED) then
+	LogService.MessageOut:Connect(function(message, messageType)
+		if not connected then return end
+		local level = "info"
+		if messageType == Enum.MessageType.MessageError then
+			level = "error"
+		elseif messageType == Enum.MessageType.MessageWarning then
+			level = "warn"
+		end
+		pcall(send, {
+			type = "log",
+			level = level,
+			message = typeof(message) == "string" and message or tostring(message),
+			timestamp = os.time(),
+		})
+	end)
+	if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
 end
-pcall(send, {
-type = "log",
-level = level,
-message = typeof(message) == "string" and message or tostring(message),
-timestamp = os.time(),
-})
-end)
-if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
+if CONFIG.suppressGameConsoleLog then
+	local outHooked = (getgenv and getgenv()._RBXDEV_OUTPUT_HOOKED) or _G._RBXDEV_OUTPUT_HOOKED
+	if not outHooked then
+		local function formatPrintArgs(...)
+			local n = select('#', ...)
+			local t = {}
+			for i = 1, n do
+				t[i] = tostring(select(i, ...))
+			end
+			return table.concat(t, '\t')
+		end
+		_G.print = function(...)
+			nativePrint(...)
+		end
+		_G.warn = function(...)
+			nativeWarn(...)
+		end
+		if getgenv then getgenv()._RBXDEV_OUTPUT_HOOKED = true end
+		_G._RBXDEV_OUTPUT_HOOKED = true
+	end
+end
 end
 local connect
 local scheduleReconnect
