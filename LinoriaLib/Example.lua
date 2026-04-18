@@ -1,4 +1,4 @@
-local repo = "https://rbreset.top/LinoriaLib/"
+local repo = "https://github.com/pagedcomic-design/Hasl/blob/main/LinoriaLib/"
 
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
