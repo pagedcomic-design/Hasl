@@ -8479,38 +8479,53 @@ return Window
 end
 
 local function OnPlayerChange()
-if Library.Unloaded then
-	return
-end
+	if Library.Unloaded then
+		return
+	end
 
-local PlayerList, ExcludedPlayerList = GetPlayers(false, true), GetPlayers(true, true)
-local StringPlayerList, StringExcludedPlayerList = GetPlayers(false, false), GetPlayers(true, false)
+	local PlayerList, ExcludedPlayerList = GetPlayers(false, true), GetPlayers(true, true)
+	local StringPlayerList, StringExcludedPlayerList = GetPlayers(false, false), GetPlayers(true, false)
 
-for _, Value in next, Options do
-	if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Player" then
-		Value:SetValues(
-		if Value.ReturnInstanceInstead then
-			(if Value.ExcludeLocalPlayer then ExcludedPlayerList else PlayerList)
-		else
-			(if Value.ExcludeLocalPlayer then StringExcludedPlayerList else StringPlayerList)
-			)
+	for _, Value in next, Options do
+		if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Player" then
+			local Values
+			if Value.ReturnInstanceInstead then
+				if Value.ExcludeLocalPlayer then
+					Values = ExcludedPlayerList
+				else
+					Values = PlayerList
+				end
+			else
+				if Value.ExcludeLocalPlayer then
+					Values = StringExcludedPlayerList
+				else
+					Values = StringPlayerList
+				end
+			end
+			Value:SetValues(Values)
 		end
 	end
 end
 
 local function OnTeamChange()
-if Library.Unloaded then
-	return
-end
-
-local TeamList = GetTeams(false)
-local StringTeamList = GetTeams(true)
-
-for _, Value in next, Options do
-	if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Team" then
-		Value:SetValues(if Value.ReturnInstanceInstead then TeamList else StringTeamList)
+	if Library.Unloaded then
+		return
 	end
-end
+
+	local TeamList = GetTeams(false)
+	local StringTeamList = GetTeams(true)
+
+	for _, Value in next, Options do
+		if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Team" then
+			local Values
+			if Value.ReturnInstanceInstead then
+				Values = TeamList
+			else
+				Values = StringTeamList
+			end
+			Value:SetValues(Values)
+		end
+	end
 end
 
 Library:GiveSignal(Players.PlayerAdded:Connect(OnPlayerChange))
