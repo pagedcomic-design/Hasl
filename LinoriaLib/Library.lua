@@ -348,6 +348,8 @@ Dialogues = Dialogues;
 ActiveDialog = nil;
 
 ImageManager = CustomImageManager;
+Windows = {};
+GlowEnabled = true;
 }
 
 if RunService:IsStudio() then
@@ -651,6 +653,15 @@ function Library:CreateGlow(Properties)
 	return GlowContainer
 end
 
+function Library:SetGlowEnabled(bool)
+	Library.GlowEnabled = bool
+	for _, Window in pairs(Library.Windows) do
+		if Window.GlowContainer then
+			Window.GlowContainer.Visible = bool
+		end
+	end
+end
+
 function Library:MakeDraggable(Instance, Cutoff, IsMainWindow)
 	Instance.Active = true
 
@@ -691,7 +702,7 @@ else
 		return
 	end
 
-	if not Dragging and Library:MouseIsOverFrame(Instance, Input) and (IsMainWindow == true and (Library.CanDrag == true and Library.Window.Holder.Visible == true) or true) then
+	if not Dragging and Library:MouseIsOverFrame(Instance, Input) and (IsMainWindow == true and (Library.CanDrag == true and Instance.Visible == true) or true) then
 		DraggingInput = Input
 		DraggingStart = Input.Position
 		StartPosition = Instance.Position
@@ -1233,7 +1244,8 @@ MenuFadeTime = 0.2,
 NotifySide = "Left",
 ShowCustomCursor = true,
 UnlockMouseWhileOpen = true,
-Center = false
+Center = false,
+Glow = true,
 },
 
 --// Elements \\--
@@ -6828,13 +6840,19 @@ function Library:CreateWindow(...)
 	Name = "Window";
 	})
 
-	Library:CreateGlow({
-		Parent = Outer;
-		GlowSize = 20;
-		Transparency = 0.6;
-		Iterations = 12;
-		ZIndex = Outer.ZIndex;
 	})
+
+	if WindowInfo.Glow then
+		Window.GlowContainer = Library:CreateGlow({
+			Parent = Outer;
+			GlowSize = 20;
+			Transparency = 0.6;
+			Iterations = 12;
+			ZIndex = Outer.ZIndex;
+		})
+		Window.GlowContainer.Visible = Library.GlowEnabled
+	end
+
 	LibraryMainOuterFrame = Outer
 	Library:MakeDraggable(Outer, 25, true)
 	if WindowInfo.Resizable then Library:MakeResizable(Outer, Library.MinSize) end
@@ -8457,6 +8475,7 @@ if WindowInfo.AutoShow then task.spawn(Library.Toggle) end
 
 Window.Holder = Outer
 Library.Window = Window
+table.insert(Library.Windows, Window)
 
 return Window
 end
