@@ -583,7 +583,7 @@ local drawing = {} do
             
                             for i, object in next, objchildren[customproperties.Parent] do
                                 if i > objindex then
-                                    object.Position = object.Position - Vector2.new(0, listadds[customproperties.Parent][obj])
+                                    safeSet(object, "Position", object.Position - Vector2.new(0, listadds[customproperties.Parent][obj]))
                                 end
                             end
 
@@ -631,31 +631,14 @@ local drawing = {} do
             end,
 
             __newindex = function(self, k, v)
-                local changechildrenvis
-                changechildrenvis = function(parent, vis)
-                    if objchildren[parent] then
-                        for _, object in next, objchildren[parent] do
-                            if (custompropertygets[mtobjs[parent]]("ClipsDescendants") and not istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size)) then
-                                safeSet(object, "Visible", false)
-                                changechildrenvis(objmts[object], false)
-                            else
-                                safeSet(object, "Visible", vis and objvisibles[object] or false)
-                                changechildrenvis(objmts[object], vis and objvisibles[object] or false)
-                            end
-                        end
-                    end
-                end
-
-                childrenvisupdates[self] = changechildrenvis
-
                 if k == "Visible" then
                     objvisibles[obj] = v
 
                     if customproperties.Parent and (not safeGet(mtobjs[customproperties.Parent], "Visible", false) or (custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") and not istouching(obj.Position, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size))) then
                         v = false
-                        changechildrenvis(self, v)
+                        childrenvisupdates[self](self, v)
                     else
-                        changechildrenvis(self, v)
+                        childrenvisupdates[self](self, v)
                     end
                 end
 
@@ -668,41 +651,6 @@ local drawing = {} do
 
                     return
                 end
-
-                local changechildrenpos
-                changechildrenpos = function(parent, val)
-                    if objchildren[parent] then
-                        if listobjs[parent] then
-                            for i, object in next, objchildren[parent] do
-                                local newpos = val + Vector2.new(0, listindexes[parent][i])
-        
-                                if scrollobjs[parent] then
-                                    newpos = val + Vector2.new(0, listindexes[parent][i] + scrollpositions[parent])
-                                end
-
-                                newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
-
-                                object.Position = newpos
-                                custompropertysets[object]("AbsolutePosition", newpos)
-
-                                changechildrenpos(objmts[object], newpos)
-                            end
-                        else
-                            for _, object in next, objchildren[parent] do
-                                local newpos = val + objpositions[object]
-                                newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
-
-                                object.Position = newpos
-
-                                custompropertysets[object]("AbsolutePosition", newpos)
-                                
-                                changechildrenpos(objmts[object], newpos)
-                            end
-                        end
-                    end
-                end
-
-                childrenposupdates[self] = changechildrenpos
 
                 if k == "Position" then
                     if typeof(v) == "UDim2" then
@@ -726,10 +674,10 @@ local drawing = {} do
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
                             safeSet(obj, "Visible", istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
-                            changechildrenvis(self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
+                            childrenvisupdates[self](self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
 
-                        changechildrenpos(self, v)
+                        childrenposupdates[self](self, v)
                     else
                         objpositions[obj] = v
 
@@ -745,10 +693,10 @@ local drawing = {} do
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
                             safeSet(obj, "Visible", istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
-                            changechildrenvis(self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
+                            childrenvisupdates[self](self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
 
-                        changechildrenpos(self, v)
+                        childrenposupdates[self](self, v)
                     end
 
                     v = v
@@ -788,13 +736,6 @@ local drawing = {} do
 
                                 custompropertysets[object]("AbsoluteSize", newsize)
 
-                                changechildrenudim2size(objmts[object], newsize)
-                                changechildrenudim2pos(objmts[object], newsize)
-                            end
-                        end
-                    end
-                end
-
                 if k == "Size" then
                     if typeof(v) == "UDim2" then
                         udim2sizeobjs[obj] = v 
@@ -816,7 +757,7 @@ local drawing = {} do
 
                             for i, object in next, objchildren[customproperties.Parent] do
                                 if i > objindex then
-                                    object.Position = object.Position + Vector2.new(0, sizediff)
+                                    safeSet(object, "Position", object.Position + Vector2.new(0, sizediff))
                                     listindexes[customproperties.Parent][i] = listindexes[customproperties.Parent][i] + sizediff
                                 end
                             end
@@ -835,7 +776,7 @@ local drawing = {} do
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
                             safeSet(obj, "Visible", istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
-                            changechildrenvis(self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
+                            childrenvisupdates[self](self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
                     else
                         if customproperties.Parent and listobjs[customproperties.Parent] then
@@ -869,7 +810,7 @@ local drawing = {} do
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
                             safeSet(obj, "Visible", istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
-                            changechildrenvis(self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
+                            childrenvisupdates[self](self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
                     end
 
@@ -884,7 +825,7 @@ local drawing = {} do
                     table.insert(objchildren[v], obj)
                     table.insert(objmtchildren[v], self)
 
-                    changechildrenvis(v, mtobjs[v].Visible)
+                    childrenvisupdates[v](v, mtobjs[v].Visible)
 
                     if udim2sizeobjs[obj] then
                         local newsize = udim2tovector2(udim2sizeobjs[obj], mtobjs[v].Size)
@@ -915,7 +856,7 @@ local drawing = {} do
 
                         customproperties.AbsolutePosition = newpos
 
-                        changechildrenpos(self, newpos)
+                        childrenposupdates[self](self, newpos)
                     end
 
                     if udim2posobjs[obj] then
@@ -928,7 +869,7 @@ local drawing = {} do
                             safeSet(obj, "Visible", istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                         end
 
-                        changechildrenpos(self, newpos)
+                        childrenposupdates[self](self, newpos)
                     elseif shape ~= "Line" and shape ~= "Quad" and shape ~= "Triangle" then
                         local newpos = mtobjs[v].Position + obj.Position
                         safeSet(obj, "Position", newpos)
@@ -938,7 +879,7 @@ local drawing = {} do
                             safeSet(obj, "Visible", istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                         end
 
-                        changechildrenpos(self, newpos)
+                        childrenposupdates[self](self, newpos)
                     end
 
                     if custompropertygets[mtobjs[v]]("ClipsDescendants") then
@@ -953,13 +894,106 @@ local drawing = {} do
             end
         })
 
+        local changechildrenvis
+        changechildrenvis = function(parent, vis)
+            if objchildren[parent] then
+                for _, object in next, objchildren[parent] do
+                    if (custompropertygets[mtobjs[parent]]("ClipsDescendants") and not istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size)) then
+                        safeSet(object, "Visible", false)
+                        changechildrenvis(objmts[object], false)
+                    else
+                        safeSet(object, "Visible", vis and objvisibles[object] or false)
+                        changechildrenvis(objmts[object], vis and objvisibles[object] or false)
+                    end
+                end
+            end
+        end
+
+        childrenvisupdates[mt] = changechildrenvis
+
+        local changechildrenpos
+        changechildrenpos = function(parent, val)
+            if objchildren[parent] then
+                if listobjs[parent] then
+                    for i, object in next, objchildren[parent] do
+                        local newpos = val + Vector2.new(0, listindexes[parent][i])
+
+                        if scrollobjs[parent] then
+                            newpos = val + Vector2.new(0, listindexes[parent][i] + scrollpositions[parent])
+                        end
+
+                        newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
+
+                        safeSet(object, "Position", newpos)
+                        custompropertysets[object]("AbsolutePosition", newpos)
+
+                        changechildrenpos(objmts[object], newpos)
+                    end
+                else
+                    for _, object in next, objchildren[parent] do
+                        local newpos = val + objpositions[object]
+                        newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
+
+                        safeSet(object, "Position", newpos)
+
+                        custompropertysets[object]("AbsolutePosition", newpos)
+                        
+                        changechildrenpos(objmts[object], newpos)
+                    end
+                end
+            end
+        end
+
+        childrenposupdates[mt] = changechildrenpos
+
+        local changechildrenudim2pos
+        changechildrenudim2pos = function(parent, val)
+            if objchildren[parent] and not listobjs[parent] then
+                for _, object in next, objchildren[parent] do
+                    if udim2posobjs[object] then
+                        local newpos = mtobjs[parent].Position + udim2tovector2(udim2posobjs[object], val)
+                        newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
+                        
+                        if not listobjs[parent] then
+                            safeSet(object, "Position", newpos)
+                        end
+
+                        custompropertysets[object]("AbsolutePosition", newpos)
+                        objpositions[object] = udim2tovector2(udim2posobjs[object], val)
+                        changechildrenpos(objmts[object], newpos)
+                    end
+                end
+            end
+        end
+
+        local changechildrenudim2size
+        changechildrenudim2size = function(parent, val)
+            if objchildren[parent] then
+                for _, object in next, objchildren[parent] do
+                    if udim2sizeobjs[object] then
+                        local newsize = udim2tovector2(udim2sizeobjs[object], val)
+                        safeSet(object, "Size", newsize)
+
+                        if custompropertygets[mtobjs[parent]]("ClipsDescendants") then
+                            safeSet(object, "Visible", istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size) and objvisibles[object] or false)
+                        end
+
+                        custompropertysets[object]("AbsoluteSize", newsize)
+
+                        changechildrenudim2size(objmts[object], newsize)
+                        changechildrenudim2pos(objmts[object], newsize)
+                    end
+                end
+            end
+        end
+
         objmts[obj] = mt
         mtobjs[mt] = obj
         objchildren[mt] = {}
         objmtchildren[mt] = {}
 
         if shape ~= "Line" and shape ~= "Quad" and shape ~= "Triangle" then
-            mt.Position = Vector2.new(0, 0)
+            safeSet(mt, "Position", Vector2.new(0, 0))
         end
 
         safeSet(mt, "Visible", true)
