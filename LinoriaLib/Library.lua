@@ -348,8 +348,6 @@ Dialogues = Dialogues;
 ActiveDialog = nil;
 
 ImageManager = CustomImageManager;
-Windows = {};
-GlowEnabled = true;
 }
 
 if RunService:IsStudio() then
@@ -653,15 +651,6 @@ function Library:CreateGlow(Properties)
 	return GlowContainer
 end
 
-function Library:SetGlowEnabled(bool)
-	Library.GlowEnabled = bool
-	for _, Window in pairs(Library.Windows) do
-		if Window.GlowContainer then
-			Window.GlowContainer.Visible = bool
-		end
-	end
-end
-
 function Library:MakeDraggable(Instance, Cutoff, IsMainWindow)
 	Instance.Active = true
 
@@ -702,7 +691,7 @@ else
 		return
 	end
 
-	if not Dragging and Library:MouseIsOverFrame(Instance, Input) and (IsMainWindow == true and (Library.CanDrag == true and Instance.Visible == true) or true) then
+	if not Dragging and Library:MouseIsOverFrame(Instance, Input) and (IsMainWindow == true and (Library.CanDrag == true and Library.Window.Holder.Visible == true) or true) then
 		DraggingInput = Input
 		DraggingStart = Input.Position
 		StartPosition = Instance.Position
@@ -1244,8 +1233,7 @@ MenuFadeTime = 0.2,
 NotifySide = "Left",
 ShowCustomCursor = true,
 UnlockMouseWhileOpen = true,
-Center = false,
-Glow = true,
+Center = false
 },
 
 --// Elements \\--
@@ -6840,17 +6828,13 @@ function Library:CreateWindow(...)
 	Name = "Window";
 	})
 
-	if WindowInfo.Glow then
-		Window.GlowContainer = Library:CreateGlow({
-			Parent = Outer;
-			GlowSize = 20;
-			Transparency = 0.6;
-			Iterations = 12;
-			ZIndex = Outer.ZIndex;
-		})
-		Window.GlowContainer.Visible = Library.GlowEnabled
-	end
-
+	Library:CreateGlow({
+		Parent = Outer;
+		GlowSize = 20;
+		Transparency = 0.6;
+		Iterations = 12;
+		ZIndex = Outer.ZIndex;
+	})
 	LibraryMainOuterFrame = Outer
 	Library:MakeDraggable(Outer, 25, true)
 	if WindowInfo.Resizable then Library:MakeResizable(Outer, Library.MinSize) end
@@ -8473,59 +8457,43 @@ if WindowInfo.AutoShow then task.spawn(Library.Toggle) end
 
 Window.Holder = Outer
 Library.Window = Window
-table.insert(Library.Windows, Window)
 
 return Window
 end
 
 local function OnPlayerChange()
-	if Library.Unloaded then
-		return
-	end
+if Library.Unloaded then
+	return
+end
 
-	local PlayerList, ExcludedPlayerList = GetPlayers(false, true), GetPlayers(true, true)
-	local StringPlayerList, StringExcludedPlayerList = GetPlayers(false, false), GetPlayers(true, false)
+local PlayerList, ExcludedPlayerList = GetPlayers(false, true), GetPlayers(true, true)
+local StringPlayerList, StringExcludedPlayerList = GetPlayers(false, false), GetPlayers(true, false)
 
-	for _, Value in next, Options do
-		if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Player" then
-			local Values
-			if Value.ReturnInstanceInstead then
-				if Value.ExcludeLocalPlayer then
-					Values = ExcludedPlayerList
-				else
-					Values = PlayerList
-				end
-			else
-				if Value.ExcludeLocalPlayer then
-					Values = StringExcludedPlayerList
-				else
-					Values = StringPlayerList
-				end
-			end
-			Value:SetValues(Values)
+for _, Value in next, Options do
+	if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Player" then
+		Value:SetValues(
+		if Value.ReturnInstanceInstead then
+			(if Value.ExcludeLocalPlayer then ExcludedPlayerList else PlayerList)
+		else
+			(if Value.ExcludeLocalPlayer then StringExcludedPlayerList else StringPlayerList)
+			)
 		end
 	end
 end
 
 local function OnTeamChange()
-	if Library.Unloaded then
-		return
-	end
+if Library.Unloaded then
+	return
+end
 
-	local TeamList = GetTeams(false)
-	local StringTeamList = GetTeams(true)
+local TeamList = GetTeams(false)
+local StringTeamList = GetTeams(true)
 
-	for _, Value in next, Options do
-		if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Team" then
-			local Values
-			if Value.ReturnInstanceInstead then
-				Values = TeamList
-			else
-				Values = StringTeamList
-			end
-			Value:SetValues(Values)
-		end
+for _, Value in next, Options do
+	if Value.SetValues and Value.Type == "Dropdown" and Value.SpecialType == "Team" then
+		Value:SetValues(if Value.ReturnInstanceInstead then TeamList else StringTeamList)
 	end
+end
 end
 
 Library:GiveSignal(Players.PlayerAdded:Connect(OnPlayerChange))
