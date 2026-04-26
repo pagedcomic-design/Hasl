@@ -272,6 +272,11 @@ end
 
 local DPIScale = 1;
 local Library = {
+	Tween = function(self, Instance, Properties, Duration, Style, Direction)
+		local Tween = TweenService:Create(Instance, TweenInfo.new(Duration or 0.2, Style or Enum.EasingStyle.Quad, Direction or Enum.EasingDirection.Out), Properties)
+		Tween:Play()
+		return Tween
+	end,
 Registry = {};
 RegistryMap = {};
 HudRegistry = {};
