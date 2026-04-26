@@ -2026,7 +2026,6 @@ Options[Idx] = KeyPicker
 
 return self
 end
-BaseAddonsFuncs.AddKeybind = BaseAddonsFuncs.AddKeyPicker
 
 function BaseAddonsFuncs:AddColorPicker(Idx, Info)
 	local ParentObj = self
