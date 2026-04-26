@@ -131,14 +131,6 @@ Path = "LinoriaLib/assets/SaturationMap.png",
 URL = BaseURL .. "assets/SaturationMap.png",
 
 Id = nil,
-},
-
-Shadow = {
-RobloxId = 6014264793,
-Path = "LinoriaLib/assets/Shadow.png",
-URL = BaseURL .. "assets/Shadow.png",
-
-Id = nil,
 }
 }
 local MonacoFont = nil
@@ -830,19 +822,6 @@ function Library:AddToolTip(InfoStr, DisabledInfoStr, HoverInstance)
 	Parent = Library.ScreenGui;
 
 	Visible = false;
-	})
-
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 99,
-	Parent = Tooltip,
 	})
 
 	local Label = Library:CreateLabel({
@@ -2298,19 +2277,6 @@ do
 	Parent = ScreenGui
 	})
 
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 13,
-	Parent = ContextMenu.Container,
-	})
-
 	ContextMenu.Inner = Library:Create("Frame", {
 	BackgroundColor3 = Library.BackgroundColor;
 	BorderColor3 = Library.OutlineColor;
@@ -2837,20 +2803,6 @@ function BaseAddonsFuncs:AddDropdown(Idx, Info)
 	Visible = false;
 	Parent = ScreenGui;
 	})
-
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 19,
-	Parent = ListOuter,
-	})
-
 
 	local OpenedXSizeForList = 0
 
@@ -4867,20 +4819,6 @@ function BaseGroupboxFuncs:AddDropdown(Idx, Info)
 	Parent = ScreenGui;
 	})
 
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 19,
-	Parent = ListOuter,
-	})
-
-
 	local function RecalculateListPosition()
 	ListOuter.Position = UDim2.fromOffset(DropdownOuter.AbsolutePosition.X, DropdownOuter.AbsolutePosition.Y + DropdownOuter.Size.Y.Offset + 1)
 end
@@ -6603,24 +6541,11 @@ do
 	local NotifyOuter = Library:Create("Frame", {
 	BorderColor3 = Color3.new(0, 0, 0);
 	Size = UDim2.new(0, 0, 0, YSize);
-	ClipsDescendants = false;
+	ClipsDescendants = true;
 	ZIndex = 11000;
 	Visible = false;
 	Name = "Notif";
 	Parent = Side == "left" and Library.LeftNotificationArea or Library.RightNotificationArea;
-	})
-
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 10999,
-	Parent = NotifyOuter,
 	})
 
 	local NotifyInner = Library:Create("Frame", {
@@ -6857,19 +6782,6 @@ function Library:CreateWindow(...)
 	Parent = ScreenGui;
 	Name = "Window";
 	})
-
-	Library:Create("ImageLabel", {
-	Name = "Shadow",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundTransparency = 1,
-	Image = CustomImageManager.GetAsset("Shadow"),
-	ImageColor3 = Color3.new(0, 0, 0),
-	ImageTransparency = 0.4,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.new(1, 150, 1, 150),
-	ZIndex = 0,
-	Parent = Outer,
-	})
 	LibraryMainOuterFrame = Outer
 	Library:MakeDraggable(Outer, 25, true)
 	if WindowInfo.Resizable then Library:MakeResizable(Outer, Library.MinSize) end
@@ -7072,19 +6984,6 @@ function Library:CreateWindow(...)
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Text = "",
 		AutoButtonColor = false,
-		})
-
-		Library:Create("ImageLabel", {
-		Name = "Shadow",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundTransparency = 1,
-		Image = CustomImageManager.GetAsset("Shadow"),
-		ImageColor3 = Color3.new(0, 0, 0),
-		ImageTransparency = 0.4,
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(1, 150, 1, 150),
-		ZIndex = 9000,
-		Parent = DialogFrame,
 		})
 
 		local DialogInner = Library:Create("Frame", {
