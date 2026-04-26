@@ -6840,8 +6840,6 @@ function Library:CreateWindow(...)
 	Name = "Window";
 	})
 
-	})
-
 	if WindowInfo.Glow then
 		Window.GlowContainer = Library:CreateGlow({
 			Parent = Outer;
