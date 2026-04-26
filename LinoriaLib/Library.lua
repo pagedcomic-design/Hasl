@@ -7531,6 +7531,31 @@ function Window:AddTab(Name)
 	BackgroundColor3 = "MainColor";
 	})
 
+	local TabGlow = Library:Create("Frame", {
+		BackgroundColor3 = Library.AccentColor,
+		BorderSizePixel = 0,
+		Position = UDim2.new(0, 0, 0, 0),
+		Size = UDim2.new(1, 0, 0, 0),
+		BackgroundTransparency = 1,
+		ZIndex = 0,
+		Parent = TabButton,
+	})
+
+	Library:Create("UIGradient", {
+		Rotation = -90,
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0),
+			NumberSequenceKeypoint.new(0.074, 0.69),
+			NumberSequenceKeypoint.new(0.354, 0.91),
+			NumberSequenceKeypoint.new(1, 1)
+		}),
+		Parent = TabGlow,
+	})
+
+	Library:AddToRegistry(TabGlow, {
+		BackgroundColor3 = "AccentColor",
+	})
+
 	local TabFrame = Library:Create("Frame", {
 	Name = "TabFrame",
 	BackgroundTransparency = 1;
@@ -7796,6 +7821,8 @@ function Tab:ShowTab()
 	Library.RegistryMap[TabButton].Properties.BackgroundColor3 = "MainColor"
 	TabFrame.Visible = true
 
+	Library:Tween(TabGlow, { BackgroundTransparency = 0, Size = UDim2.new(1, 0, 1, 0) })
+
 	Tab:Resize()
 end
 Tab.Show = Tab.ShowTab
@@ -7806,6 +7833,8 @@ function Tab:HideTab()
 	TabButton.BackgroundColor3 = Library.BackgroundColor
 	Library.RegistryMap[TabButton].Properties.BackgroundColor3 = "BackgroundColor"
 	TabFrame.Visible = false
+
+	Library:Tween(TabGlow, { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0) })
 end
 Tab.Hide = Tab.HideTab
 
