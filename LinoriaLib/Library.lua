@@ -226,49 +226,48 @@ end
 
 local CustomFontManager = {}
 
-function CustomFontManager.LoadFont()
+function CustomFontManager.LoadFont(Name, URL)
 	if not getcustomasset or not writefile or not isfile then
 		return nil
 	end
 
 	local HttpService = game:GetService("HttpService")
-	local FontPath = "LinoriaLib/assets/Unifont.otf"
-	local JsonPath = "LinoriaLib/assets/unifont.json"
-	local FontURL = BaseURL .. "assets/Unifont.otf"
+	local FontPath = "LinoriaLib/assets/" .. Name .. ".ttf"
+	local JsonPath = "LinoriaLib/assets/" .. Name .. ".json"
 
 	RecursiveCreatePath(FontPath, true)
 
 	if not isfile(FontPath) then
 		pcall(function()
-		writefile(FontPath, game:HttpGet(FontURL))
-	end)
-end
+			writefile(FontPath, game:HttpGet(URL))
+		end)
+	end
 
-if isfile(FontPath) then
-	if not isfile(JsonPath) then
+	if isfile(FontPath) then
+		if not isfile(JsonPath) then
+			local success, result = pcall(function()
+				writefile(JsonPath, HttpService:JSONEncode({
+					name = Name,
+					faces = {{name = "Regular", weight = 400, style = "normal", assetId = getcustomasset(FontPath)}}
+				}))
+			end)
+			if not success then return nil end
+		end
+
 		local success, result = pcall(function()
-		writefile(JsonPath, HttpService:JSONEncode({
-		name = "Unifont",
-		faces = {{name = "Regular", weight = 400, style = "normal", assetId = getcustomasset(FontPath)}}
-		}))
-	end)
-	if not success then return nil end
+			return Font.new(getcustomasset(JsonPath))
+		end)
+		if success then
+			return result
+		else
+			warn("LinoriaLib Custom Font Error: " .. tostring(result))
+		end
+	end
+
+	return nil
 end
 
-local success, result = pcall(function()
-return Font.new(getcustomasset(JsonPath))
-end)
-if success then
-	return result
-else
-	warn("LinoriaLib Unifont Error: " .. tostring(result))
-end
-end
-
-return nil
-end
-
-MonacoFont = CustomFontManager.LoadFont()
+MonacoFont = CustomFontManager.LoadFont("Windows-XP-Tahoma", "https://github.com/sametexe001/luas/raw/refs/heads/main/fonts/windows-xp-tahoma.ttf")
 end
 
 local DPIScale = 1;
