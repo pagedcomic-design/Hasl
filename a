@@ -213,10 +213,23 @@ local drawing = {} do
     local squares = {}
     local objsignals = {}
     local objexists = {}
+    
+    local function safeSet(obj, prop, value)
+        pcall(function()
+            obj[prop] = value
+        end)
+    end
+
+    local function safeGet(obj, prop, default)
+        local success, result = pcall(function()
+            return obj[prop]
+        end)
+        return success and result or default
+    end
 
     local function mouseoverhighersquare(obj)
         for _, square in next, squares do
-            if square.Visible == true and square.ZIndex > obj.ZIndex then
+            if safeGet(square, "Visible", false) == true and safeGet(square, "ZIndex", 0) > safeGet(obj, "ZIndex", 0) then
                 if ismouseover(square) then
                     return true
                 end
@@ -235,7 +248,7 @@ local drawing = {} do
                     end
                 end
 
-                if obj.Visible then
+                if safeGet(obj, "Visible", false) then
                     if ismouseover(obj) then
                         if input.UserInputType == Enum.UserInputType.MouseButton1 and not mouseoverhighersquare(obj) then
                             if signals.MouseButton1Up then
@@ -265,7 +278,7 @@ local drawing = {} do
 
     services.InputService.InputChanged:Connect(function(input, gpe)
         for obj, signals in next, objsignals do
-            if objexists[obj] and obj.Visible and (signals.MouseEnter or signals.MouseMove or signals.InputChanged or signals.MouseLeave) then
+            if objexists[obj] and safeGet(obj, "Visible", false) and (signals.MouseEnter or signals.MouseMove or signals.InputChanged or signals.MouseLeave) then
                 if ismouseover(obj) then
                     if not signals.mouseentered then
                         signals.mouseentered = true
@@ -296,7 +309,7 @@ local drawing = {} do
     services.InputService.InputBegan:Connect(function(input, gpe)
         for obj, signals in next, objsignals do
             if objexists[obj] then
-                if obj.Visible then
+                if safeGet(obj, "Visible", false) then
                     if ismouseover(obj) and not mouseoverhighersquare(obj) then 
                         signals.inputbegan[input] = true
 
@@ -411,10 +424,10 @@ local drawing = {} do
                                 if custompropertygets[mtobjs[self]]("ClipsDescendants") then
                                     for i, object in next, objchildren[self] do
                                         if not istouching(object.Position + Vector2.new(0, poschange - diff + objpaddings[self]), object.Size, mtobjs[self].Position, mtobjs[self].Size) then
-                                            object.Visible = false
+                                            safeSet(object, "Visible", false)
                                             childrenvisupdates[objmts[object]](objmts[object], false)
                                         else
-                                            object.Visible = true
+                                            safeSet(object, "Visible", true)
                                             childrenvisupdates[objmts[object]](objmts[object], true)
                                         end
                                     end
@@ -424,7 +437,7 @@ local drawing = {} do
 
                                 for i, object in next, objchildren[self] do
                                     childrenposupdates[objmts[object]](objmts[object], object.Position + Vector2.new(0, poschange - diff + objpaddings[self]))
-                                    object.Position = object.Position + Vector2.new(0, poschange - diff + objpaddings[self])
+                                    safeSet(object, "Position", object.Position + Vector2.new(0, poschange - diff + objpaddings[self]))
                                 end
                             else
                                 local poschange = currentclippedobj.Size.Y + objpaddings[self]
@@ -432,10 +445,10 @@ local drawing = {} do
                                 if custompropertygets[mtobjs[self]]("ClipsDescendants") then
                                     for i, object in next, objchildren[self] do
                                         if not istouching(object.Position + Vector2.new(0, poschange), object.Size, mtobjs[self].Position, mtobjs[self].Size) then
-                                            object.Visible = false
+                                            safeSet(object, "Visible", false)
                                             childrenvisupdates[objmts[object]](objmts[object], false)
                                         else
-                                            object.Visible = true
+                                            safeSet(object, "Visible", true)
                                             childrenvisupdates[objmts[object]](objmts[object], true)
                                         end
                                     end
@@ -623,10 +636,10 @@ local drawing = {} do
                     if objchildren[parent] then
                         for _, object in next, objchildren[parent] do
                             if (custompropertygets[mtobjs[parent]]("ClipsDescendants") and not istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size)) then
-                                object.Visible = false
+                                safeSet(object, "Visible", false)
                                 changechildrenvis(objmts[object], false)
                             else
-                                object.Visible = vis and objvisibles[object] or false
+                                safeSet(object, "Visible", vis and objvisibles[object] or false)
                                 changechildrenvis(objmts[object], vis and objvisibles[object] or false)
                             end
                         end
@@ -638,7 +651,7 @@ local drawing = {} do
                 if k == "Visible" then
                     objvisibles[obj] = v
 
-                    if customproperties.Parent and (not mtobjs[customproperties.Parent].Visible or (custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") and not istouching(obj.Position, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size))) then
+                    if customproperties.Parent and (not safeGet(mtobjs[customproperties.Parent], "Visible", false) or (custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") and not istouching(obj.Position, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size))) then
                         v = false
                         changechildrenvis(self, v)
                     else
@@ -650,7 +663,7 @@ local drawing = {} do
                     customproperties.ClipsDescendants = v
 
                     for _, object in next, objchildren[self] do
-                        object.Visible = v and (istouching(object.Position, object.Size, obj.Position, obj.Size) and objvisibles[object] or false) or objvisibles[object]
+                        safeSet(object, "Visible", v and (istouching(object.Position, object.Size, obj.Position, obj.Size) and objvisibles[object] or false) or objvisibles[object])
                     end
 
                     return
@@ -712,7 +725,7 @@ local drawing = {} do
                         customproperties.AbsolutePosition = v
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
-                            obj.Visible = istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                             changechildrenvis(self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
 
@@ -731,7 +744,7 @@ local drawing = {} do
                         customproperties.AbsolutePosition = v
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
-                            obj.Visible = istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                             changechildrenvis(self, istouching(v, obj.Size, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
 
@@ -750,7 +763,7 @@ local drawing = {} do
                                 newpos = Vector2.new(math.floor(newpos.X), math.floor(newpos.Y))
                                 
                                 if not listobjs[parent] then
-                                    object.Position = newpos
+                                    safeSet(object, "Position", newpos)
                                 end
 
                                 custompropertysets[object]("AbsolutePosition", newpos)
@@ -767,10 +780,10 @@ local drawing = {} do
                         for _, object in next, objchildren[parent] do
                             if udim2sizeobjs[object] then
                                 local newsize = udim2tovector2(udim2sizeobjs[object], val)
-                                object.Size = newsize
+                                safeSet(object, "Size", newsize)
 
                                 if custompropertygets[mtobjs[parent]]("ClipsDescendants") then
-                                    object.Visible = istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size) and objvisibles[object] or false
+                                    safeSet(object, "Visible", istouching(object.Position, object.Size, mtobjs[parent].Position, mtobjs[parent].Size) and objvisibles[object] or false)
                                 end
 
                                 custompropertysets[object]("AbsoluteSize", newsize)
@@ -816,12 +829,12 @@ local drawing = {} do
 
                         if customproperties.ClipsDescendants then
                             for _, object in next, objchildren[self] do
-                                object.Visible = istouching(object.Position, object.Size, obj.Position, v) and objvisibles[object] or false
+                                safeSet(object, "Visible", istouching(object.Position, object.Size, obj.Position, v) and objvisibles[object] or false)
                             end
                         end
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
-                            obj.Visible = istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                             changechildrenvis(self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
                     else
@@ -836,7 +849,7 @@ local drawing = {} do
 
                             for i, object in next, objchildren[customproperties.Parent] do
                                 if i > objindex then
-                                    object.Position = object.Position + Vector2.new(0, sizediff)
+                                    safeSet(object, "Position", object.Position + Vector2.new(0, sizediff))
                                     listcontents[customproperties.Parent] = listcontents[customproperties.Parent] + sizediff
                                     listindexes[customproperties.Parent][i] = listindexes[customproperties.Parent][i] + sizediff
                                 end
@@ -850,12 +863,12 @@ local drawing = {} do
 
                         if customproperties.ClipsDescendants then
                             for _, object in next, objchildren[self] do
-                                object.Visible = istouching(object.Position, object.Size, obj.Position, v) and objvisibles[object] or false
+                                safeSet(object, "Visible", istouching(object.Position, object.Size, obj.Position, v) and objvisibles[object] or false)
                             end
                         end
 
                         if customproperties.Parent and custompropertygets[mtobjs[customproperties.Parent]]("ClipsDescendants") then
-                            obj.Visible = istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                             changechildrenvis(self, istouching(obj.Position, v, mtobjs[customproperties.Parent].Position, mtobjs[customproperties.Parent].Size) and objvisibles[obj] or false)
                         end
                     end
@@ -875,10 +888,10 @@ local drawing = {} do
 
                     if udim2sizeobjs[obj] then
                         local newsize = udim2tovector2(udim2sizeobjs[obj], mtobjs[v].Size)
-                        obj.Size = newsize
+                        safeSet(obj, "Size", newsize)
 
                         if custompropertygets[mtobjs[v]]("ClipsDescendants") then
-                            obj.Visible = istouching(obj.Position, newsize, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(obj.Position, newsize, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                         end
 
                         changechildrenudim2pos(self, newsize)
@@ -898,7 +911,7 @@ local drawing = {} do
 
                         listcontents[v] = listcontents[v] + obj.Size.Y + (#listchildren[v] == 1 and 0 or objpaddings[v])
 
-                        obj.Position = newpos
+                        safeSet(obj, "Position", newpos)
 
                         customproperties.AbsolutePosition = newpos
 
@@ -908,35 +921,35 @@ local drawing = {} do
                     if udim2posobjs[obj] then
                         local newpos = mtobjs[v].Position + udim2tovector2(udim2posobjs[obj], mtobjs[v].Size)
                         objpositions[obj] = udim2tovector2(udim2posobjs[obj], mtobjs[v].Size)
-                        obj.Position = newpos
+                        safeSet(obj, "Position", newpos)
                         customproperties.AbsolutePosition = newpos
 
                         if custompropertygets[mtobjs[v]]("ClipsDescendants") then
-                            obj.Visible = istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                         end
 
                         changechildrenpos(self, newpos)
                     elseif shape ~= "Line" and shape ~= "Quad" and shape ~= "Triangle" then
                         local newpos = mtobjs[v].Position + obj.Position
-                        obj.Position = newpos
+                        safeSet(obj, "Position", newpos)
                         customproperties.AbsolutePosition = newpos
 
                         if custompropertygets[mtobjs[v]]("ClipsDescendants") then
-                            obj.Visible = istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false
+                            safeSet(obj, "Visible", istouching(newpos, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                         end
 
                         changechildrenpos(self, newpos)
                     end
 
                     if custompropertygets[mtobjs[v]]("ClipsDescendants") then
-                        obj.Visible = istouching(obj.Position, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false
+                        safeSet(obj, "Visible", istouching(obj.Position, obj.Size, mtobjs[v].Position, mtobjs[v].Size) and objvisibles[obj] or false)
                     end
                     
                     customproperties.Parent = v
                     return
                 end
 
-                obj[k] = v
+                safeSet(obj, k, v)
             end
         })
 
@@ -949,7 +962,7 @@ local drawing = {} do
             mt.Position = Vector2.new(0, 0)
         end
 
-        mt.Visible = true
+        safeSet(mt, "Visible", true)
 
         return mt
     end
@@ -1768,14 +1781,14 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
                     value.Text = #chosen == 0 and "NONE" or table.concat(textchosen, ", ") .. (cutobject and ", ..." or "")
                     utility.changeobjecttheme(value, #chosen == 0 and "Disabled Text" or "Text")
 
-                    button.Transparency = 0
+                    safeSet(button, "Transparency", 0)
                     utility.changeobjecttheme(text, "Disabled Text")
 
                     library.flags[flag] = chosen
                     callback(chosen)
                 else
                     if #chosen == max then
-                        optioninstances[chosen[1]].button.Transparency = 0
+                        safeSet(optioninstances[chosen[1]].button, "Transparency", 0)
                         utility.changeobjecttheme(optioninstances[chosen[1]].text, "Disabled Text")
 
                         table.remove(chosen, 1)
@@ -1798,7 +1811,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
                     value.Text = #chosen == 0 and "NONE" or table.concat(textchosen, ", ") .. (cutobject and ", ..." or "")
                     utility.changeobjecttheme(value, #chosen == 0 and "Disabled Text" or "Text")
 
-                    button.Transparency = 1
+                    safeSet(button, "Transparency", 1)
                     utility.changeobjecttheme(text, "Text")
 
                     library.flags[flag] = chosen
@@ -1807,7 +1820,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
             else
                 for opt, tbl in next, optioninstances do
                     if opt ~= option then
-                        tbl.button.Transparency = 0
+                        safeSet(tbl.button, "Transparency", 0)
                         utility.changeobjecttheme(tbl.text, "Disabled Text")
                     end
                 end
@@ -1818,7 +1831,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
                     value.Text = "NONE"
                     utility.changeobjecttheme(value, "Disabled Text")
 
-                    button.Transparency = 0
+                    safeSet(button, "Transparency", 0)
 
                     utility.changeobjecttheme(text, "Disabled Text")
 
@@ -1830,7 +1843,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
                     value.Text = option
                     utility.changeobjecttheme(value, "Text")
 
-                    button.Transparency = 1
+                    safeSet(button, "Transparency", 1)
                     utility.changeobjecttheme(text, "Text")
 
                     library.flags[flag] = option
@@ -1857,7 +1870,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
 
             for opt, tbl in next, optioninstances do
                 if not table.find(option, opt) then
-                    tbl.button.Transparency = 0
+                    safeSet(tbl.button, "Transparency", 0)
                     utility.changeobjecttheme(tbl.text, "Disabled Text")
                 end
             end
@@ -1865,7 +1878,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
             for i, opt in next, option do
                 if table.find(content, opt) and #chosen < max then
                     table.insert(chosen, opt)
-                    optioninstances[opt].button.Transparency = 1
+                    safeSet(optioninstances[opt].button, "Transparency", 1)
                     utility.changeobjecttheme(optioninstances[opt].text, "Text")
                 end
             end
@@ -1892,7 +1905,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
         if not max then
             for opt, tbl in next, optioninstances do
                 if opt ~= option then
-                    tbl.button.Transparency = 0
+                    safeSet(tbl.button, "Transparency", 0)
                     utility.changeobjecttheme(tbl.text, "Disabled Text")
                 end
             end
@@ -1903,7 +1916,7 @@ function library.createdropdown(holder, content, flag, callback, default, max, s
                 value.Text = option
                 utility.changeobjecttheme(value, "Text")
 
-                optioninstances[option].button.Transparency = 1
+                safeSet(optioninstances[option].button, "Transparency", 1)
                 utility.changeobjecttheme(optioninstances[option].text, "Text")
 
                 library.flags[flag] = chosen
@@ -2380,7 +2393,7 @@ function library.createcolorpicker(default, defaultalpha, parent, count, flag, c
 
         if hsv ~= oldcolor or alpha ~= oldalpha then
             icon.Color = hsv
-            alphaicon.Transparency = 1 - alpha
+            safeSet(alphaicon, "Transparency", 1 - alpha)
             alphaframe.Color = hsv
 
             if not nopos then
