@@ -6799,7 +6799,7 @@ function Library:CreateWindow(...)
 	end
 
 	if WindowInfo.Size == UDim2.fromOffset(0, 0) then
-		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(550, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(550, 600)
+		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(650, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(650, 600)
 	end
 
 	Library.NotifySide = WindowInfo.NotifySide
@@ -6904,31 +6904,16 @@ function Library:CreateWindow(...)
 	})
 
 	local TabListLayout = Library:Create("UIListLayout", {
-	Padding = UDim.new(0, WindowInfo.TabPadding);
+	Padding = UDim.new(0, WindowInfo.TabPadding or 6);
 	FillDirection = Enum.FillDirection.Horizontal;
 	SortOrder = Enum.SortOrder.LayoutOrder;
 	VerticalAlignment = Enum.VerticalAlignment.Center;
 	Parent = TabArea;
 	})
 
-	Library:Create("Frame", {
-	BackgroundColor3 = Library.BackgroundColor;
-	BorderColor3 = Library.OutlineColor;
-	Size = UDim2.new(0, 0, 0, 0);
-	LayoutOrder = -1;
-	BackgroundTransparency = 1;
-	ZIndex = 1;
-	Parent = TabArea;
-	})
-	Library:Create("Frame", {
-	BackgroundColor3 = Library.BackgroundColor;
-	BorderColor3 = Library.OutlineColor;
-	Size = UDim2.new(0, 0, 0, 0);
-	LayoutOrder = 9999999;
-	BackgroundTransparency = 1;
-	ZIndex = 1;
-	Parent = TabArea;
-	})
+	pcall(function()
+		TabListLayout.HorizontalFlex = Enum.UIFlexAlignment.Fill
+	end)
 
 	local TabContainer = Library:Create("Frame", {
 	BackgroundColor3 = Library.MainColor;
@@ -7499,7 +7484,7 @@ function Window:AddTab(Name)
 	BackgroundColor3 = Library.BackgroundColor;
 	BorderColor3 = Library.OutlineColor;
 	BorderMode = Enum.BorderMode.Inset;
-	Size = UDim2.new(0, TabButtonWidth + 14, 1, 0);
+	Size = UDim2.new(1, 0, 1, 0);
 	BorderSizePixel = 1;
 	ZIndex = 1;
 	Parent = TabArea;
