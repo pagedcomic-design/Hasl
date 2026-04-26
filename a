@@ -500,9 +500,9 @@ local drawing = {} do
                     table.insert(listindexes[self], listcontents[self] + (#listchildren[self] == 1 and 0 or padding))
 
                     local newpos = mtobjs[self].Position + Vector2.new(0, listcontents[self] + (#listchildren[self] == 1 and 0 or padding))
-                    object.Position = newpos
+                    safeSet(object, "Position", newpos)
                     
-                    childrenposupdates[object](objmts[object], newpos)
+                    childrenposupdates[objmts[object]](objmts[object], newpos)
 
                     custompropertysets[object]("AbsolutePosition", newpos)
                     
