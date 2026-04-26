@@ -606,6 +606,51 @@ function Library:CreateLabel(Properties, IsHud)
 	return Library:Create(_Instance, Properties)
 end
 
+function Library:CreateGlow(Properties)
+	local GlowContainer = Library:Create("Frame", {
+		BackgroundTransparency = 1;
+		Size = Properties.Size or UDim2.new(1, 0, 1, 0);
+		Position = Properties.Position or UDim2.new(0, 0, 0, 0);
+		ZIndex = Properties.ZIndex or 0;
+		Parent = Properties.Parent;
+		Name = "GlowContainer";
+	})
+
+	local GlowColor = Properties.Color or Library.AccentColor
+	local GlowSize = (Properties.GlowSize or 15) * DPIScale
+	local GlowTransparency = Properties.Transparency or 0.5
+	local Iterations = Properties.Iterations or 10
+
+	for i = 1, Iterations do
+		local Alpha = (1 - (i / Iterations)) ^ 2.5 * (1 - GlowTransparency)
+		local Offset = i * (GlowSize / Iterations)
+		
+		local GlowFrame = Library:Create("Frame", {
+			BackgroundColor3 = GlowColor;
+			BackgroundTransparency = 1 - Alpha;
+			BorderSizePixel = 0;
+			Position = UDim2.new(0, -Offset, 0, -Offset);
+			Size = UDim2.new(1, Offset * 2, 1, Offset * 2);
+			ZIndex = GlowContainer.ZIndex - i;
+			Parent = GlowContainer;
+			Name = "Glow" .. i;
+		})
+
+		Library:Create("UICorner", {
+			CornerRadius = UDim.new(0, Offset);
+			Parent = GlowFrame;
+		})
+
+		if Properties.Color == nil then
+			Library:AddToRegistry(GlowFrame, {
+				BackgroundColor3 = "AccentColor";
+			})
+		end
+	end
+	
+	return GlowContainer
+end
+
 function Library:MakeDraggable(Instance, Cutoff, IsMainWindow)
 	Instance.Active = true
 
@@ -6781,6 +6826,14 @@ function Library:CreateWindow(...)
 	ZIndex = 1;
 	Parent = ScreenGui;
 	Name = "Window";
+	})
+
+	Library:CreateGlow({
+		Parent = Outer;
+		GlowSize = 20;
+		Transparency = 0.6;
+		Iterations = 12;
+		ZIndex = Outer.ZIndex;
 	})
 	LibraryMainOuterFrame = Outer
 	Library:MakeDraggable(Outer, 25, true)
