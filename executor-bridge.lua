@@ -528,6 +528,17 @@ if not ok then
 	nativeWarn("[rbxdev-bridge] Send failed: " .. tostring(err))
 end
 end
+local function startHeartbeat()
+	task.spawn(function()
+		while bridgeAlive do
+			task.wait(15)
+			if connected then
+				pcall(send, { type = 'ping', t = os.clock() })
+			end
+		end
+	end)
+end
+
 local sendResult = function(messageType, id, success, payload)
 local result = { type = messageType, id = id, success = success }
 for k, v in pairs(payload or {}) do result[k] = v end
@@ -1466,6 +1477,12 @@ MESSAGE_HANDLERS.setRemoteSpyBlockList = function(message)
 rebuildRemoteSpyBlockMaps(message.blocks)
 sendResult('setRemoteSpyBlockListResult', message.id, true)
 end
+MESSAGE_HANDLERS.ping = function()
+	pcall(send, { type = 'pong', t = os.clock() })
+end
+MESSAGE_HANDLERS.pong = function()
+	-- received pong from server, connection is healthy
+end
 local handleMessage = function(rawMessage)
 local message = jsonDecode(rawMessage)
 if message == nil then return end
@@ -1566,6 +1583,8 @@ healthProbeFailures = 0
 if getgenv and getgenv()._UWUPAWZ_BRIDGE then
 	getgenv()._UWUPAWZ_BRIDGE.connection = ws
 end
+setupLogHooks()
+startHeartbeat()
 send{ type = 'connected', executorName = executorName, version = executorVersion }
 send{ type = 'gameTree', data = getGameTree(nil, CONFIG.firstConnectDepth) }
 ws.OnMessage:Connect(handleMessage)
