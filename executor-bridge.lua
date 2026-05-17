@@ -12,6 +12,7 @@ if getgenv and getgenv()._UWUPAWZ_BRIDGE then
 	if old.nativePrint then pcall(function() _G.print = old.nativePrint end) end
 	if old.nativeWarn then pcall(function() _G.warn = old.nativeWarn end) end
 	if getgenv()._RBXDEV_OUTPUT_HOOKED then getgenv()._RBXDEV_OUTPUT_HOOKED = nil end
+	if getgenv()._RBXDEV_LOG_HOOKED then getgenv()._RBXDEV_LOG_HOOKED = nil end
 	_G._RBXDEV_OUTPUT_HOOKED = nil
 	if old.connection then pcall(old.connection.Close, old.connection) end
 	for _, conn in ipairs(old.refreshConnections or {}) do pcall(conn.Disconnect, conn) end
