@@ -1491,10 +1491,7 @@ local handler = MESSAGE_HANDLERS[message.type]
 if handler == nil then return end
 handler(message)
 end
-local logHooksSetup = false
 local setupLogHooks = function()
-if logHooksSetup then return end
-logHooksSetup = true
 if not (getgenv and getgenv()._RBXDEV_LOG_HOOKED) then
 	LogService.MessageOut:Connect(function(message, messageType)
 		if not connected then return end
@@ -1516,6 +1513,14 @@ end
 if CONFIG.suppressGameConsoleLog then
 	local outHooked = (getgenv and getgenv()._RBXDEV_OUTPUT_HOOKED) or _G._RBXDEV_OUTPUT_HOOKED
 	if not outHooked then
+		local function formatPrintArgs(...)
+			local n = select('#', ...)
+			local t = {}
+			for i = 1, n do
+				t[i] = tostring(select(i, ...))
+			end
+			return table.concat(t, '\t')
+		end
 		_G.print = function(...)
 			nativePrint(...)
 		end
