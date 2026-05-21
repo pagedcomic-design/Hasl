@@ -1491,8 +1491,10 @@ local handler = MESSAGE_HANDLERS[message.type]
 if handler == nil then return end
 handler(message)
 end
+local logHooksSetup = false
 local setupLogHooks = function()
-if not (getgenv and getgenv()._RBXDEV_LOG_HOOKED) then
+if logHooksSetup then return end
+logHooksSetup = true
 	LogService.MessageOut:Connect(function(message, messageType)
 		if not connected then return end
 		local level = "info"
@@ -1508,11 +1510,7 @@ if not (getgenv and getgenv()._RBXDEV_LOG_HOOKED) then
 			timestamp = os.time(),
 		})
 	end)
-	if getgenv then getgenv()._RBXDEV_LOG_HOOKED = true end
-end
 if CONFIG.suppressGameConsoleLog then
-	local outHooked = (getgenv and getgenv()._RBXDEV_OUTPUT_HOOKED) or _G._RBXDEV_OUTPUT_HOOKED
-	if not outHooked then
 		local function formatPrintArgs(...)
 			local n = select('#', ...)
 			local t = {}
@@ -1522,14 +1520,29 @@ if CONFIG.suppressGameConsoleLog then
 			return table.concat(t, '\t')
 		end
 		_G.print = function(...)
-			nativePrint(...)
+			if not connected then
+				nativePrint(...)
+				return
+			end
+			pcall(send, {
+				type = "log",
+				level = "info",
+				message = formatPrintArgs(...),
+				timestamp = os.time(),
+			})
 		end
 		_G.warn = function(...)
-			nativeWarn(...)
+			if not connected then
+				nativeWarn(...)
+				return
+			end
+			pcall(send, {
+				type = "log",
+				level = "warn",
+				message = formatPrintArgs(...),
+				timestamp = os.time(),
+			})
 		end
-		if getgenv then getgenv()._RBXDEV_OUTPUT_HOOKED = true end
-		_G._RBXDEV_OUTPUT_HOOKED = true
-	end
 end
 end
 local connect
