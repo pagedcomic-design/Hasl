@@ -1520,7 +1520,7 @@ end
 if CONFIG.suppressGameConsoleLog then
 	local outHooked = (getgenv and getgenv()._RBXDEV_OUTPUT_HOOKED) or _G._RBXDEV_OUTPUT_HOOKED
 	if not outHooked then
-		_G.print = function(...)
+		local function bridgePrint(...)
 			local args = {...}
 			if connected then
 				pcall(send, {
@@ -1531,7 +1531,7 @@ if CONFIG.suppressGameConsoleLog then
 				})
 			end
 		end
-		_G.warn = function(...)
+		local function bridgeWarn(...)
 			local args = {...}
 			if connected then
 				pcall(send, {
@@ -1542,6 +1542,19 @@ if CONFIG.suppressGameConsoleLog then
 				})
 			end
 		end
+		-- Override via multiple paths since executors differ
+		_G.print = bridgePrint
+		_G.warn = bridgeWarn
+		-- Some executors use print directly, not _G.print
+		pcall(function() print = bridgePrint end)
+		pcall(function() warn = bridgeWarn end)
+		-- hookfunction replaces the C function itself (Synapse, Scriptware, etc.)
+		pcall(function()
+			if type(hookfunction) == "function" then
+				hookfunction(print, bridgePrint)
+				hookfunction(warn, bridgeWarn)
+			end
+		end)
 		if getgenv then getgenv()._RBXDEV_OUTPUT_HOOKED = true end
 		_G._RBXDEV_OUTPUT_HOOKED = true
 	end
