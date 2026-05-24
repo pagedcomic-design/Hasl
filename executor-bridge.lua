@@ -1145,14 +1145,18 @@ end
 MESSAGE_HANDLERS.execute = function(message)
 local fn, loadError = loadstring(message.code)
 if fn == nil then
-	sendResult('executeResult', message.id, false, { error = parseError(tostring(loadError)) })
+	local errStr = parseError(tostring(loadError))
+	sendResult('executeResult', message.id, false, { error = errStr })
+	pcall(send, { type = 'log', level = 'error', message = errStr, timestamp = os.time() })
 	return
 end
 local env = getfenv and getfenv() or getgenv and getgenv() or _G
 setfenv(fn, env)
 local ok, result = pcall(fn)
 if not ok then
-	sendResult('executeResult', message.id, false, { error = parseError(tostring(result)) })
+	local errStr = parseError(tostring(result))
+	sendResult('executeResult', message.id, false, { error = errStr })
+	pcall(send, { type = 'log', level = 'error', message = errStr, timestamp = os.time() })
 	return
 end
 sendResult('executeResult', message.id, true, { result = result ~= nil and tostring(result) or nil })
@@ -1491,7 +1495,10 @@ local handler = MESSAGE_HANDLERS[message.type]
 if handler == nil then return end
 handler(message)
 end
+local logHooksSetup = false
 local setupLogHooks = function()
+if logHooksSetup then return end
+logHooksSetup = true
 if not (getgenv and getgenv()._RBXDEV_LOG_HOOKED) then
 	LogService.MessageOut:Connect(function(message, messageType)
 		if not connected then return end
@@ -1513,19 +1520,27 @@ end
 if CONFIG.suppressGameConsoleLog then
 	local outHooked = (getgenv and getgenv()._RBXDEV_OUTPUT_HOOKED) or _G._RBXDEV_OUTPUT_HOOKED
 	if not outHooked then
-		local function formatPrintArgs(...)
-			local n = select('#', ...)
-			local t = {}
-			for i = 1, n do
-				t[i] = tostring(select(i, ...))
-			end
-			return table.concat(t, '\t')
-		end
 		_G.print = function(...)
-			nativePrint(...)
+			local args = {...}
+			if connected then
+				pcall(send, {
+					type = "log",
+					level = "info",
+					message = table.concat(args, "\t"),
+					timestamp = os.time(),
+				})
+			end
 		end
 		_G.warn = function(...)
-			nativeWarn(...)
+			local args = {...}
+			if connected then
+				pcall(send, {
+					type = "log",
+					level = "warn",
+					message = table.concat(args, "\t"),
+					timestamp = os.time(),
+				})
+			end
 		end
 		if getgenv then getgenv()._RBXDEV_OUTPUT_HOOKED = true end
 		_G._RBXDEV_OUTPUT_HOOKED = true
